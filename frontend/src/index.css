@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+/* โทเคนสี/ฟอนต์ของแบรนด์ (ที่มา: docs/design.md) — ใช้เป็น class ได้ เช่น bg-plum-800, text-ink-2, font-serif */
+@theme {
+  --color-plum-800: #5e2250; /* ม่วงมังคุด: sidebar, ปุ่มหลัก, ลิงก์ */
+  --color-plum-300: #cda9c0; /* ข้อความรองบนพื้นม่วง */
+  --color-plum-50: #f7eef4; /* ข้อความบนพื้นม่วง */
+  --color-sage-400: #9dbb8f; /* เขียวอ่อน: เมนูที่เลือก, ตราดอกบนพื้นม่วง */
+  --color-paper: #fbf9fc; /* พื้นหลังหน้า */
+  --color-ink: #2a1a2e; /* ข้อความหลัก */
+  --color-ink-2: #6e5b68; /* ข้อความรอง */
+  --color-ink-3: #7d6b76; /* ข้อความจาง — เข้มกว่าใน wireframe (#a99aa4) เพื่อให้ contrast ผ่านมาตรฐาน */
+  --color-line: #e4dae0; /* เส้นคั่น */
+
+  --font-serif: 'Taviraj', serif; /* หัวข้อและตัวเลข */
+  --font-sans: 'IBM Plex Sans Thai', system-ui, sans-serif; /* เนื้อความและ UI */
+}
+
+/* สไตล์พื้นฐานของทั้งหน้า */
+@layer base {
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+  }
+}

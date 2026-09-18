@@ -1,0 +1,14 @@
+{
+  "app": {
+    "name": "Mangosteen Campus",
+    "tagline": "The online learning system for your courses"
+  },
+  "status": {
+    "checking": "Checking the connection to the system",
+    "ok": "Connected to the backend",
+    "error": "Can't reach the backend yet"
+  },
+  "language": {
+    "label": "Language"
+  }
+}
