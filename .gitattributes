@@ -1,0 +1,17 @@
+# บังคับให้ไฟล์ข้อความทั้งหมดใช้ LF (ตรงกับ CI / Linux / Docker) แม้แก้บน Windows
+* text=auto eol=lf
+
+# ไฟล์ที่ Windows ต้องการ CRLF จริง ๆ
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# ไฟล์ไบนารี — ห้าม git แก้ไขเนื้อหา
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
