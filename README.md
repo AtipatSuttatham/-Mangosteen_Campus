@@ -14,7 +14,7 @@ Docker Desktop · [uv](https://docs.astral.sh/uv/) · Node.js 22+ · [pnpm](http
 3. **รัน backend** (โฟลเดอร์ `backend/`)
    ```
    uv sync
-   uv run --env-file ../.env python manage.py runserver
+   uv run --env-file ../.env python manage.py runserver 8010
    ```
    > ⚠️ ยังไม่ต้องรัน `migrate` — ต้องรอให้มี User model แบบกำหนดเอง (ก้อนระบบ login) ก่อน มิฉะนั้นตารางผู้ใช้จะถูกสร้างผิดแบบ
 4. **รัน frontend** (โฟลเดอร์ `frontend/`)
@@ -22,13 +22,21 @@ Docker Desktop · [uv](https://docs.astral.sh/uv/) · Node.js 22+ · [pnpm](http
    pnpm install
    pnpm dev
    ```
-   เปิด http://localhost:5173 — คำขอที่ขึ้นต้นด้วย `/api` จะถูก proxy ไปหา Django ที่ `http://localhost:8000`
+   เปิด http://localhost:5180 — คำขอที่ขึ้นต้นด้วย `/api` จะถูก proxy ไปหา Django ที่ `http://localhost:8010`
 
-### ถ้าพอร์ตชนกับโปรแกรมอื่น
-- **Postgres (5432)**: ถ้ามี PostgreSQL อื่นใช้พอร์ตนี้อยู่ ให้ตั้ง `POSTGRES_PORT=5433` ใน `.env` แล้วรัน `docker compose up -d db` ใหม่
-- **Backend (8000)**: `uv run --env-file ../.env python manage.py runserver 8001` แล้วเปิด frontend ด้วย
-  `API_PROXY_TARGET=http://localhost:8001` (PowerShell: `$env:API_PROXY_TARGET="http://localhost:8001"`)
-- **Frontend (5173)**: `pnpm dev --port 5174`
+### พอร์ตที่โปรเจกต์นี้ใช้
+โปรเจกต์นี้ใช้พอร์ตของตัวเอง (ไม่ใช่ค่ามาตรฐาน) เพื่อไม่ให้ชนกับโปรเจกต์อื่นที่รันอยู่บนเครื่อง
+
+| ส่วน | พอร์ต | ตั้งค่าที่ |
+|---|---|---|
+| Frontend (Vite) | 5180 | `frontend/vite.config.ts` (ถ้าพอร์ตถูกใช้อยู่ Vite จะหยุดพร้อมแจ้ง ไม่เลื่อนไปพอร์ตอื่นเงียบ ๆ) |
+| Backend (Django) | 8010 | ระบุตอนรัน `runserver 8010` |
+| Postgres | 5432 (ค่าเริ่มต้น) | `POSTGRES_PORT` ใน `.env` |
+
+- ถ้าเปลี่ยนพอร์ต backend ให้ตั้ง `API_PROXY_TARGET` ให้ตรงตอนรัน frontend
+  (PowerShell: `$env:API_PROXY_TARGET="http://localhost:8011"`)
+- **Postgres**: ถ้ามี PostgreSQL อื่นใช้พอร์ต 5432 อยู่แล้ว (จะต่อผิดตัวและล็อกอินไม่ผ่าน) ให้ตั้ง `POSTGRES_PORT=5433` ใน `.env`
+  แล้วรัน `docker compose up -d db` ใหม่
 
 ## ตรวจโค้ดก่อน push (ตรงกับที่ CI รัน)
 
