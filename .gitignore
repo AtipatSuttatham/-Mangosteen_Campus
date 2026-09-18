@@ -1,0 +1,24 @@
+# ความลับ / ค่าประจำเครื่อง — ห้าม commit
+.env
+.env.*
+!.env.example
+
+# Python / backend
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+db.sqlite3
+
+# Node / frontend
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# เครื่องมือ / ระบบปฏิบัติการ
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+[project]
+name = "mangosteen-backend"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=5.2,<5.3",
+    "djangorestframework>=3.18.1",
+    "djangorestframework-simplejwt>=5.5.1",
+    "psycopg[binary]>=3.3.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-django>=4.14.0",
+    "ruff>=0.16.8",
+]
+
+# pytest: ใช้ settings ของโปรเจกต์ และหาไฟล์ test ชื่อ test_*.py
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+
+# ruff: lint (E/F = ข้อผิดพลาดทั่วไป, I = เรียง import, B = บั๊กที่พบบ่อย) + format
+[tool.ruff]
+line-length = 100
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]

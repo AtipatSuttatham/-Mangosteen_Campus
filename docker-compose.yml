@@ -1,0 +1,22 @@
+# Docker Compose ครอบคลุมเฉพาะ Postgres ตอน dev — backend (uv) และ frontend (pnpm) รันตรงบนเครื่อง
+# ค่าต่าง ๆ อ่านจากไฟล์ .env ที่ root (คัดลอกจาก .env.example)
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
