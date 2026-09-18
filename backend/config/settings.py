@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# แอปที่เปิดใช้งาน: ของ Django เอง + DRF + แอปของโปรเจกต์ (เพิ่มแอปใหม่ต่อท้ายตามฟีเจอร์)
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     "common",
 ]
 
+# middleware ที่ทุก request ผ่านตามลำดับ (session/csrf ยังจำเป็นสำหรับหน้า Django admin)
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -55,8 +57,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# ไฟล์ URL หลักของโปรเจกต์
 ROOT_URLCONF = "config.urls"
 
+# ระบบ template (ใช้กับหน้า Django admin และอีเมลแบบ template ภายหลัง)
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -72,6 +76,7 @@ TEMPLATES = [
     },
 ]
 
+# จุดเข้าแบบ WSGI สำหรับเซิร์ฟเวอร์ production
 WSGI_APPLICATION = "config.wsgi.application"
 
 # ฐานข้อมูล: PostgreSQL (dev รันผ่าน docker-compose.yml ที่ root ของ repo)
@@ -86,6 +91,8 @@ DATABASES = {
     }
 }
 
+# กฎตรวจรหัสผ่านตอนตั้ง/เปลี่ยน — ตรงกับรายการในหน้าตั้งรหัสผ่านของ wireframe
+# (ยาวพอ / ไม่ใช่รหัสยอดนิยม / ไม่ใช่ตัวเลขล้วน / ไม่คล้ายข้อมูลผู้ใช้)
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -100,8 +107,10 @@ TIME_ZONE = "Asia/Bangkok"
 USE_I18N = True
 USE_TZ = True
 
+# ที่อยู่ URL ของไฟล์ static (ใช้กับหน้า Django admin)
 STATIC_URL = "static/"
 
+# ชนิด primary key เริ่มต้นของทุกตาราง (BigAutoField ตาม docs/database.md)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ไม่ตั้ง CORS: frontend เรียก /api ผ่าน proxy (Vite ตอน dev / hosting ตอน deploy) จึงเป็น origin เดียวกัน
