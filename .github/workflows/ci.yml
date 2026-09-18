@@ -1,0 +1,74 @@
+# CI: ตรวจโค้ดอัตโนมัติทุกครั้งที่ push และทุก pull request
+# (คำสั่งชุดเดียวกับที่รันในเครื่อง ดู README.md หัวข้อ "ตรวจโค้ดก่อน push")
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# CI ต้องการสิทธิ์แค่อ่านโค้ดเท่านั้น
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (ruff + pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # settings.py ไม่ยอมเริ่มถ้าไม่มี secret และไม่ได้เปิด debug — ใช้ค่าสำหรับ CI เท่านั้น
+      DJANGO_SECRET_KEY: ci-only-not-a-real-secret
+    steps:
+      - uses: actions/checkout@v4
+
+      # ติดตั้ง uv (พร้อม cache แพ็กเกจตาม uv.lock)
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      # ติดตั้ง dependency ตามที่ล็อกไว้ใน uv.lock เท่านั้น (ไม่อัปเดตเอง)
+      - run: uv sync --frozen
+
+      - name: ruff (lint)
+        run: uv run ruff check .
+
+      - name: ruff (format)
+        run: uv run ruff format --check .
+
+      - name: pytest
+        run: uv run pytest
+
+  frontend:
+    name: Frontend (tsc + eslint + vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      # ติดตั้ง pnpm ตามเวอร์ชันที่ระบุใน package.json (packageManager)
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # ติดตั้งตามที่ล็อกไว้ใน pnpm-lock.yaml เท่านั้น (ไม่อัปเดตเอง)
+      - run: pnpm install --frozen-lockfile
+
+      - name: typecheck (tsc)
+        run: pnpm run typecheck
+
+      - name: eslint
+        run: pnpm run lint
+
+      - name: vitest
+        run: pnpm run test

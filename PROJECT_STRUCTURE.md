@@ -13,6 +13,10 @@ Mangosteen_Campus/
 ├── .env.example            ตัวอย่างค่า environment (คัดลอกเป็น .env ที่ root แล้วแก้ค่า)
 ├── docker-compose.yml      รัน PostgreSQL ตอน dev (เฉพาะ DB — backend/frontend รันตรงบนเครื่อง)
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml            CI (GitHub Actions): backend = ruff + pytest / frontend = tsc + eslint + vitest
+│
 ├── docs/                   เอกสารออกแบบ
 │   ├── database.md           สเปกฐานข้อมูลเต็ม (field / constraint / ความสัมพันธ์) v1.3 freeze
 │   ├── database-guide.md     ใครเขียน/ใครอ่านแต่ละตาราง, state machine, workflow ครบวงจร
@@ -55,6 +59,5 @@ Mangosteen_Campus/
 ```
 
 ## ที่ยังไม่มี (จะเพิ่มตามลำดับ)
-- `.github/workflows/` — CI (backend: pytest + ruff / frontend: tsc + eslint + vitest)
 - แอป backend อื่นตาม `docs/database.md` §2 (accounts, academics, ฯลฯ) — เพิ่มพร้อมฟีเจอร์ที่ใช้
 - หน้าจอจริงตาม wireframe (login, dashboard ฯลฯ) และ React Router
