@@ -74,8 +74,14 @@ Mangosteen_Campus/
         ├── index.css         Tailwind + โทเคนสี/ฟอนต์ของแบรนด์ (@theme)
         ├── components/       component ที่ใช้ซ้ำ: LogoMark (ตราดอก), LanguageToggle (สลับ TH/EN)
         ├── i18n/             ระบบหลายภาษา: index.ts (ตั้งค่า, ค่าเริ่มต้น = ไทย) + locales/th.json, en.json
-        ├── lib/api.ts        ฟังก์ชันเรียก backend (ตอนนี้มีแค่ health check)
-        └── test/setup.ts     ตั้งค่าที่รันก่อนทุก test
+        ├── lib/api.ts        ฟังก์ชันเรียก backend (ตอนนี้มีแค่ health check — จะถูกแทนที่ด้วย apiClient)
+        ├── lib/apiError.ts   ApiError: error จาก backend ที่มี `code` ไว้แปลข้อความ
+        ├── lib/httpCore.ts   ยิงคำขอ 1 ครั้ง (แนบ token, แปลง error) ไม่มีการลองซ้ำ
+        ├── lib/apiClient.ts  เรียก API ที่ต้อง login: 401 → ขอ token ใหม่แล้วลองซ้ำครั้งเดียว
+        ├── auth/session.ts   เซสชัน: เก็บ access token ในหน่วยความจำ, login/logout/refresh (ขอทีละคำขอ), สัญญาณเมื่อเซสชันเปลี่ยน
+        ├── types/auth.ts     ชนิดข้อมูล User / Role / Session ตรงกับ backend
+        └── test/             ตัวช่วยสำหรับ test: setup.ts (ตั้งค่าก่อนทุก test), fetchMock.ts (จำลอง backend)
+                              (ไฟล์ *.test.ts(x) อยู่ข้างไฟล์ที่ทดสอบ)
 ```
 
 ## ที่ยังไม่มี (จะเพิ่มตามลำดับ)

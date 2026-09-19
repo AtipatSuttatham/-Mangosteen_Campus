@@ -1,9 +1,20 @@
 // ตัวช่วยตรวจ DOM ใน test เช่น toBeInTheDocument
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
 
-// ล้าง component ที่ render ไว้หลังจบแต่ละ test เพื่อไม่ให้ปนกัน
+import { setAccessToken } from '../auth/session'
+import i18n from '../i18n'
+
+// ทุก test เริ่มที่ภาษาไทยเสมอ (ค่าเริ่มต้นของระบบ)
+beforeEach(async () => {
+  await i18n.changeLanguage('th')
+})
+
 afterEach(() => {
+  // ล้าง component ที่ render ไว้เพื่อไม่ให้ปนกัน
   cleanup()
+  // เลิกจำลอง fetch และล้าง access token ที่ค้างในหน่วยความจำ
+  vi.unstubAllGlobals()
+  setAccessToken(null)
 })
