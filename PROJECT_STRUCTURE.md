@@ -33,10 +33,20 @@ Mangosteen_Campus/
 │   │   ├── urls.py             URL หลัก — API ทั้งหมดอยู่ใต้ /api/
 │   │   ├── wsgi.py             จุดเข้าแบบ WSGI (ใช้ตอน deploy)
 │   │   └── asgi.py             จุดเข้าแบบ ASGI
-│   └── common/               แอปกลางที่ใช้ร่วมกัน
-│       ├── models.py           (ว่าง) จะเป็นที่อยู่ของ abstract model: TimeStampedModel / Auditable / SoftDeleteModel
-│       ├── views.py            health check (`GET /api/health/`)
-│       └── test_health.py      test ของ health check
+│   ├── common/               แอปกลางที่ใช้ร่วมกัน
+│   │   ├── models.py           abstract model กลาง: TimeStampedModel (Auditable / SoftDeleteModel จะเพิ่มภายหลัง)
+│   │   ├── views.py            health check (`GET /api/health/`)
+│   │   └── test_health.py      test ของ health check
+│   └── accounts/             บัญชีผู้ใช้ (ต่อไปคือล็อกอิน/สมัคร/ยืนยันอีเมล)
+│       ├── models.py           User แบบกำหนดเอง (อีเมลเป็นตัวล็อกอิน + รหัสนักศึกษา/พนักงาน + role) พร้อม constraint
+│       ├── roles.py            บทบาทระดับระบบ: admin / teacher / student
+│       ├── validators.py       ตรวจรหัสนักศึกษา/พนักงาน (ห้ามมี @)
+│       ├── managers.py         create_user / create_superuser
+│       ├── forms.py            ฟอร์มสร้าง/แก้ผู้ใช้ในหน้า Django admin
+│       ├── admin.py            หน้าจัดการผู้ใช้ใน Django admin (ใช้ชั่วคราวก่อนมีหน้าจัดการจริง)
+│       ├── migrations/         migration ของแอปนี้ (0001 = ตารางผู้ใช้ ซึ่งเป็น migration แรกของโปรเจกต์)
+│       ├── test_models.py      test กฎของ User (normalize อีเมล/รหัส, unique, constraint ของฐานข้อมูล)
+│       └── test_admin.py       test หน้า admin และคำสั่ง createsuperuser
 │
 └── frontend/               React 19 + Vite + TypeScript + Tailwind v4 (จัดการแพ็กเกจด้วย pnpm)
     ├── package.json          dependency + สคริปต์ (dev / build / typecheck / lint / test)
@@ -59,5 +69,5 @@ Mangosteen_Campus/
 ```
 
 ## ที่ยังไม่มี (จะเพิ่มตามลำดับ)
-- แอป backend อื่นตาม `docs/database.md` §2 (accounts, academics, ฯลฯ) — เพิ่มพร้อมฟีเจอร์ที่ใช้
+- แอป backend อื่นตาม `docs/database.md` §2 (academics, enrollment ฯลฯ) — เพิ่มพร้อมฟีเจอร์ที่ใช้
 - หน้าจอจริงตาม wireframe (login, dashboard ฯลฯ) และ React Router

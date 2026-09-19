@@ -17,9 +17,31 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    # Postgres สำหรับ test ที่ใช้ฐานข้อมูล (ชนิดและเวอร์ชันเดียวกับ dev ใน docker-compose.yml)
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: mangosteen
+          POSTGRES_USER: mangosteen
+          POSTGRES_PASSWORD: ci-only-not-a-real-password
+        ports:
+          - 5432:5432
+        # รอให้ฐานข้อมูลพร้อมก่อนเริ่มขั้นตอนถัดไป
+        options: >-
+          --health-cmd "pg_isready -U mangosteen -d mangosteen"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     env:
       # settings.py ไม่ยอมเริ่มถ้าไม่มี secret และไม่ได้เปิด debug — ใช้ค่าสำหรับ CI เท่านั้น
       DJANGO_SECRET_KEY: ci-only-not-a-real-secret
+      # ค่าเชื่อมต่อฐานข้อมูลของ CI (ตรงกับ service ด้านบน; ใช้เฉพาะใน CI ไม่ใช่ความลับจริง)
+      POSTGRES_DB: mangosteen
+      POSTGRES_USER: mangosteen
+      POSTGRES_PASSWORD: ci-only-not-a-real-password
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
     steps:
       - uses: actions/checkout@v4
 

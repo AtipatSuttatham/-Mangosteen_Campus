@@ -44,7 +44,14 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "common",
+    "accounts",
 ]
+
+# ใช้โมเดลผู้ใช้ของโปรเจกต์ (accounts.User) แทนของ Django — ต้องตั้งก่อน migrate ครั้งแรก
+AUTH_USER_MODEL = "accounts.User"
+
+# ฟอร์มที่รับ URL โดยไม่ระบุ http/https ให้ถือเป็น https (ค่านี้จะเป็นค่าเริ่มต้นของ Django 6.0)
+FORMS_URLFIELD_ASSUME_HTTPS = True
 
 # middleware ที่ทุก request ผ่านตามลำดับ (session/csrf ยังจำเป็นสำหรับหน้า Django admin)
 MIDDLEWARE = [

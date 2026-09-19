@@ -14,9 +14,12 @@ Docker Desktop · [uv](https://docs.astral.sh/uv/) · Node.js 22+ · [pnpm](http
 3. **รัน backend** (โฟลเดอร์ `backend/`)
    ```
    uv sync
+   uv run --env-file ../.env python manage.py migrate
    uv run --env-file ../.env python manage.py runserver 8010
    ```
-   > ⚠️ ยังไม่ต้องรัน `migrate` — ต้องรอให้มี User model แบบกำหนดเอง (ก้อนระบบ login) ก่อน มิฉะนั้นตารางผู้ใช้จะถูกสร้างผิดแบบ
+   - `migrate` สร้างตารางในฐานข้อมูล (รันครั้งแรกและทุกครั้งที่มี migration ใหม่)
+   - สร้างผู้ดูแลระบบคนแรกด้วย `uv run --env-file ../.env python manage.py createsuperuser`
+     แล้วเข้าหน้าจัดการที่ http://localhost:8010/admin/ (ใช้ชั่วคราวจนกว่าจะมีหน้าจัดการผู้ใช้จริง)
 4. **รัน frontend** (โฟลเดอร์ `frontend/`)
    ```
    pnpm install
