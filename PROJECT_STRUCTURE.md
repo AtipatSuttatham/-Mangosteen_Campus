@@ -22,6 +22,7 @@ Mangosteen_Campus/
 │   ├── database-guide.md     ใครเขียน/ใครอ่านแต่ละตาราง, state machine, workflow ครบวงจร
 │   ├── database-erd.md       ERD แบบ Mermaid แยกตามโดเมน
 │   ├── database-fields.md    สรุป field ทุกตารางแบบ quick reference
+│   ├── api-auth.md           สัญญา API ล็อกอิน (endpoint, cookie, รูปแบบ error) สำหรับฝั่งเว็บ
 │   └── design.md             แนวทางดีไซน์ UI (สี ฟอนต์ โครงหน้า) + สถานะ wireframe
 │
 ├── backend/                Django 5.2 + DRF (จัดการแพ็กเกจด้วย uv)
@@ -46,9 +47,16 @@ Mangosteen_Campus/
 │       ├── managers.py         create_user / create_superuser
 │       ├── forms.py            ฟอร์มสร้าง/แก้ผู้ใช้ในหน้า Django admin
 │       ├── admin.py            หน้าจัดการผู้ใช้ใน Django admin (ใช้ชั่วคราวก่อนมีหน้าจัดการจริง)
+│       ├── services.py         หาผู้ใช้จากช่อง login ช่องเดียว (@ = อีเมล) และตรวจรหัสผ่าน
+│       ├── tokens.py           ออก/ตรวจ refresh token (ใส่ role) และตั้ง/ลบ cookie
+│       ├── serializers.py      รูปแบบข้อมูลเข้า-ออกของ login และข้อมูลผู้ใช้
+│       ├── exceptions.py       error ของระบบล็อกอิน (แต่ละตัวมี `code`)
+│       ├── views.py            endpoint: login / refresh / logout / me
+│       ├── urls.py             เส้นทางใต้ /api/auth/
 │       ├── migrations/         migration ของแอปนี้ (0001 = ตารางผู้ใช้ ซึ่งเป็น migration แรกของโปรเจกต์)
 │       ├── test_models.py      test กฎของ User (normalize อีเมล/รหัส, unique, constraint ของฐานข้อมูล)
-│       └── test_admin.py       test หน้า admin และคำสั่ง createsuperuser
+│       ├── test_admin.py       test หน้า admin และคำสั่ง createsuperuser
+│       └── test_auth_api.py    test API ล็อกอินทั้งชุด (ปกติ + กรณีโจมตี)
 │
 └── frontend/               React 19 + Vite + TypeScript + Tailwind v4 (จัดการแพ็กเกจด้วย pnpm)
     ├── package.json          dependency + สคริปต์ (dev / build / typecheck / lint / test)

@@ -1,0 +1,82 @@
+# API ล็อกอิน (`/api/auth/`)
+
+> สัญญาระหว่าง backend กับ frontend — ฝั่งเว็บอ้างอิงไฟล์นี้ ไม่ต้องเดา
+> โค้ดอยู่ที่ `backend/accounts/` (views.py, tokens.py, services.py) test ที่ `backend/accounts/test_auth_api.py`
+
+## แนวคิด (อ่านสั้น ๆ)
+- **access token** อายุ 15 นาที — เว็บเก็บ **ในหน่วยความจำเท่านั้น** (ไม่ใช้ localStorage) แล้วส่งใน header `Authorization: Bearer <access>`
+- **refresh token** อายุ 7 วัน — เก็บใน **httpOnly cookie** ที่โค้ดหน้าเว็บอ่านไม่ได้ เบราว์เซอร์ส่งให้เองเฉพาะเส้นทาง `/api/auth/`
+- เมื่อ access หมดอายุ (หรือเปิดหน้าใหม่ที่ยังไม่มี access) เว็บเรียก `refresh` เพื่อขอ access ใหม่ — เรียกครั้งไหน ระบบจะหมุนเวียน: ใบแลกเดิมใช้ไม่ได้อีก และได้ cookie ใบใหม่
+- **role ใน token ใช้แสดงเมนูเท่านั้น** สิทธิ์จริงของแต่ละวิชา backend ตรวจจากฐานข้อมูลทุกครั้ง
+
+## กฎที่ frontend ต้องทำตาม
+1. ทุกคำขอไป backend ใช้ path ขึ้นต้นด้วย `/api` (Vite proxy ตอน dev)
+2. เรียก `refresh` และ `logout` ต้องส่ง header **`X-Requested-With: fetch`** (ค่าอะไรก็ได้ที่ไม่ว่าง) และแนบ cookie (`credentials: "same-origin"`) — ไม่มี header นี้จะได้ 403 (กัน CSRF)
+3. แสดงข้อความ error โดยใช้ **`code`** เป็นกุญแจแปลไทย/อังกฤษ ไม่แสดง `detail` จาก backend ตรง ๆ
+4. อย่าเก็บ access token ลง localStorage/sessionStorage/cookie ที่โค้ดอ่านได้
+5. เรียก `refresh` **ครั้งละคำขอ** ต่อแท็บ (ถ้ามีหลายส่วนต้องการ token พร้อมกันให้รอผลคำขอเดียวกัน) เพราะใบแลกใบเดิมใช้ได้ครั้งเดียว
+
+## Endpoint
+
+### `POST /api/auth/login/`
+เข้าสู่ระบบ — ช่องเดียวรับทั้งอีเมลและรหัสนักศึกษา/พนักงาน (**มี `@` = อีเมล, ไม่มี = รหัส**)
+
+คำขอ (JSON)
+```json
+{ "identifier": "somchai@example.com", "password": "..." }
+```
+- อีเมล: ไม่สนตัวพิมพ์เล็ก/ใหญ่ ตัดช่องว่างหัวท้าย
+- รหัส: **แยกตัวพิมพ์เล็ก/ใหญ่** (`T0042` ≠ `t0042`) ตัดช่องว่างหัวท้าย
+
+สำเร็จ `200` + ตั้ง cookie `refresh_token`
+```json
+{
+  "access": "<access token>",
+  "user": { "id": 1, "email": "...", "student_or_staff_id": "T0042", "role": "teacher",
+            "first_name": "...", "last_name": "...", "first_name_en": "", "last_name_en": "",
+            "is_email_verified": true, "avatar_url": "" }
+}
+```
+ล้มเหลว
+
+| สถานะ | `code` | เมื่อไหร่ |
+|---|---|---|
+| 401 | `invalid_credentials` | ไม่พบผู้ใช้ / รหัสผ่านผิด / บัญชีถูกปิด / ยังไม่ได้ตั้งรหัสผ่าน (ข้อความเดียวกันทุกกรณี) |
+| 403 | `email_not_verified` | รหัสผ่านถูก แต่ยังไม่ยืนยันอีเมล (บอกเฉพาะเมื่อรหัสผ่านถูก) |
+| 400 | `validation_error` | ไม่ส่ง `identifier` หรือ `password` |
+
+### `POST /api/auth/refresh/`
+แลกใบแลก (จาก cookie) เป็น access ใหม่ + หมุนเวียนใบแลก — ไม่ต้องมีเนื้อหาคำขอ ต้องมี header `X-Requested-With`
+
+สำเร็จ `200` — รูปแบบเดียวกับ login (ได้ `access` + `user` ล่าสุด และ cookie ใบใหม่) ใช้ตอนเปิดเว็บใหม่เพื่อกู้สถานะล็อกอินได้เลยโดยไม่ต้องเรียก `me` แยก
+
+| สถานะ | `code` | เมื่อไหร่ |
+|---|---|---|
+| 401 | `invalid_refresh_token` | ไม่มี cookie / หมดอายุ / ถูกใช้ไปแล้ว / ออกจากระบบแล้ว / บัญชีถูกปิด (ระบบลบ cookie ให้) → ให้พาไปหน้า login |
+| 403 | `missing_requested_with_header` | ลืมส่ง header |
+
+### `POST /api/auth/logout/`
+เพิกถอนใบแลกและลบ cookie — ต้องมี header `X-Requested-With` ตอบ `204` เสมอ (เรียกซ้ำหรือไม่มี cookie ก็ไม่ error) เว็บควรล้าง access token ในหน่วยความจำด้วย
+> access token ที่ออกไปแล้วยังใช้ได้จนหมดอายุ (สูงสุด 15 นาที) แต่ขอใหม่ไม่ได้อีก
+
+### `GET /api/auth/me/`
+ข้อมูลผู้ใช้ที่ล็อกอินอยู่ — ต้องส่ง `Authorization: Bearer <access>`
+
+สำเร็จ `200` — เฉพาะ object `user` ตามรูปแบบข้างบน
+
+| สถานะ | `code` | เมื่อไหร่ |
+|---|---|---|
+| 401 | `not_authenticated` | ไม่ส่ง token |
+| 401 | `token_not_valid` | token หมดอายุ/ผิดรูปแบบ/บัญชีถูกปิด → เรียก `refresh` แล้วลองใหม่หนึ่งครั้ง ถ้ายัง 401 ให้ไปหน้า login |
+
+## รูปแบบ error ทั้งระบบ
+```json
+{ "code": "invalid_credentials", "detail": "ข้อมูลเข้าสู่ระบบไม่ถูกต้อง" }
+{ "code": "validation_error", "errors": { "identifier": ["This field is required."] } }
+```
+
+## สิ่งที่ยังไม่ทำ (ตั้งใจ)
+- จำกัดจำนวนครั้งที่ล็อกอินผิด (ผู้ใช้สั่งข้ามไว้ก่อน — **ต้องทำก่อน deploy จริง**)
+- บันทึก Audit Log ตอนล็อกอิน/ออกจากระบบ (รอทำระบบ Audit)
+- ยืนยันอีเมล / ตั้งรหัสผ่าน / ลืมรหัสผ่าน (ก้อน c)
+- ลบข้อมูล token ที่หมดอายุแล้วออกจากฐานข้อมูล (มีคำสั่งสำเร็จรูป `flushexpiredtokens` ของ simplejwt ไว้เรียกเป็นครั้งคราว)
