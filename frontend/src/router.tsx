@@ -4,11 +4,22 @@ import { PublicOnly, RedirectToHome, RequireAuth, RequireRole } from './auth/gua
 import { AppShell } from './layout/AppShell'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 
 // เส้นทางทั้งหมดของแอป (แยกจาก main.tsx เพื่อให้ test ใช้ชุดเดียวกับของจริง)
 export const appRoutes: RouteObject[] = [
-  // หน้าสำหรับคนที่ยังไม่ล็อกอิน
-  { element: <PublicOnly />, children: [{ path: '/login', element: <LoginPage /> }] },
+  // หน้าสำหรับคนที่ยังไม่ล็อกอิน (ล็อกอินอยู่แล้วจะถูกพาไปหน้าแรกของบทบาท)
+  {
+    element: <PublicOnly />,
+    children: [
+      { path: '/login', element: <LoginPage /> },
+      { path: '/register', element: <RegisterPage /> },
+    ],
+  },
+
+  // หน้าที่เปิดจากลิงก์ในอีเมล: เปิดได้ทั้งตอนล็อกอินอยู่และไม่ได้ (ไม่ใส่ตัวกัน)
+  { path: '/verify-email', element: <VerifyEmailPage /> },
 
   // หน้าที่ต้องล็อกอิน
   {

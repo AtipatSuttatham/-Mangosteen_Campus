@@ -157,18 +157,96 @@ describe('หน้า login (ทั้งสายกับ AuthProvider แล
     expect(field).toHaveAttribute('type', 'password')
   })
 
-  it('ลิงก์ลืมรหัสผ่านอยู่ใต้ช่องรหัสผ่าน และลิงก์ที่ยังไม่มีหน้าปลายทางถูกปิดไว้', async () => {
+  it('ลิงก์ลืมรหัสผ่านอยู่ใต้ช่องรหัสผ่าน (ยังปิดไว้จนกว่าจะมีหน้าปลายทาง)', async () => {
     mockFetch({ [REFRESH]: noSession })
     renderApp('/login')
     const passwordField = await screen.findByLabelText('รหัสผ่าน')
 
     const forgot = screen.getByRole('button', { name: 'ลืมรหัสผ่าน' })
-    const register = screen.getByRole('button', { name: 'สมัครสมาชิกด้วยอีเมล' })
 
     expect(forgot).toBeDisabled()
-    expect(register).toBeDisabled()
     // ลืมรหัสผ่านต้องตามหลังช่องรหัสผ่านใน DOM (อยู่ใต้ช่อง ตามที่ผู้ใช้กำหนด)
     expect(passwordField.compareDocumentPosition(forgot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('ลิงก์สมัครสมาชิกพาไปหน้าสมัคร', async () => {
+    mockFetch({ [REFRESH]: noSession })
+    const router = renderApp('/login')
+
+    fireEvent.click(await screen.findByRole('link', { name: 'สมัครสมาชิกด้วยอีเมล' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/register'))
+    expect(await screen.findByRole('heading', { name: 'สมัครสมาชิก' })).toBeInTheDocument()
+  })
+
+  describe('ยังไม่ยืนยันอีเมล: ปุ่มส่งลิงก์ยืนยันอีกครั้ง', () => {
+    const RESEND = 'POST /api/auth/resend-verification/'
+
+    async function loginUnverified(identifier: string) {
+      await fillAndSubmit(identifier, 'secret')
+      await screen.findByRole('alert')
+    }
+
+    it('กรอกเป็นอีเมล → มีปุ่ม กดแล้วส่งอีเมลนั้นไปขอลิงก์ใหม่ และแสดงผลกับตัวนับถอยหลัง', async () => {
+      const mock = mockFetch({
+        [REFRESH]: noSession,
+        [LOGIN]: () => errorResponse(403, 'email_not_verified'),
+        [RESEND]: () => jsonResponse({}, 202),
+      })
+      renderApp('/login')
+      await loginUnverified('manee@example.com')
+
+      fireEvent.click(screen.getByRole('button', { name: 'ส่งลิงก์ยืนยันอีกครั้ง' }))
+
+      expect(await screen.findByText('ถ้าอีเมลนี้ยังไม่ได้ยืนยัน เราส่งลิงก์ให้แล้ว')).toBeInTheDocument()
+      expect(mock.calls.find((c) => c.url === '/api/auth/resend-verification/')?.body).toEqual({
+        email: 'manee@example.com',
+      })
+      // ห้ามกดซ้ำระหว่างรอ 60 วินาที (backend บังคับอยู่แล้ว หน้าเว็บช่วยไม่ให้กดแล้วเงียบ)
+      const waiting = screen.getByRole('button', { name: /ส่งลิงก์ยืนยันอีกครั้งได้ใน 60 วินาที/ })
+      expect(waiting).toBeDisabled()
+      fireEvent.click(waiting)
+      expect(mock.countOf(RESEND)).toBe(1)
+    })
+
+    it('กรอกเป็นรหัสนักศึกษา/พนักงาน → ไม่มีปุ่ม (ระบบไม่รู้อีเมลจึงส่งไม่ได้)', async () => {
+      mockFetch({
+        [REFRESH]: noSession,
+        [LOGIN]: () => errorResponse(403, 'email_not_verified'),
+      })
+      renderApp('/login')
+
+      await loginUnverified('6501001')
+
+      expect(screen.queryByRole('button', { name: 'ส่งลิงก์ยืนยันอีกครั้ง' })).not.toBeInTheDocument()
+    })
+
+    it('error อื่นที่ไม่ใช่ยังไม่ยืนยันอีเมล ไม่มีปุ่มนี้', async () => {
+      mockFetch({ [REFRESH]: noSession, [LOGIN]: () => errorResponse(401, 'invalid_credentials') })
+      renderApp('/login')
+
+      await loginUnverified('manee@example.com')
+
+      expect(screen.queryByRole('button', { name: 'ส่งลิงก์ยืนยันอีกครั้ง' })).not.toBeInTheDocument()
+    })
+
+    it('ส่งไม่สำเร็จ (เครือข่ายล่ม) → บอกผู้ใช้ และกดลองใหม่ได้ทันที', async () => {
+      mockFetch({
+        [REFRESH]: noSession,
+        [LOGIN]: () => errorResponse(403, 'email_not_verified'),
+        [RESEND]: () => {
+          throw new TypeError('offline')
+        },
+      })
+      renderApp('/login')
+      await loginUnverified('manee@example.com')
+
+      fireEvent.click(screen.getByRole('button', { name: 'ส่งลิงก์ยืนยันอีกครั้ง' }))
+
+      expect(await screen.findByText('เชื่อมต่อระบบไม่ได้')).toBeInTheDocument()
+      // ไม่นับถอยหลังเมื่อส่งไม่สำเร็จ
+      expect(screen.getByRole('button', { name: 'ส่งลิงก์ยืนยันอีกครั้ง' })).toBeEnabled()
+    })
   })
 
   it('ยังไม่ยืนยันอีเมลใช้กล่องเตือนสีเหลือง ส่วน error อื่นใช้กล่องสีแดง', async () => {

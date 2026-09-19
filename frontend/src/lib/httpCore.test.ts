@@ -67,6 +67,29 @@ describe('sendRequest', () => {
     expect(error.errors).toEqual({ identifier: ['ต้องกรอก'] })
   })
 
+  it('อ่านรหัสกฎรายฟิลด์ (error_codes) ไว้แปลข้อความ และข้ามค่าที่รูปแบบผิด', async () => {
+    mockFetch({
+      'POST /api/thing/': () =>
+        jsonResponse(
+          {
+            code: 'validation_error',
+            errors: { password: ['สั้นไป'] },
+            error_codes: { password: ['password_too_short', 'password_too_common'] },
+          },
+          400,
+        ),
+      'POST /api/broken/': () =>
+        jsonResponse({ code: 'validation_error', error_codes: { password: 'not-a-list' } }, 400),
+    })
+
+    const error = await rejection(sendRequest('/api/thing/', { method: 'POST' }))
+    const broken = await rejection(sendRequest('/api/broken/', { method: 'POST' }))
+
+    expect(error.errorCodes).toEqual({ password: ['password_too_short', 'password_too_common'] })
+    // รูปแบบที่ไม่ตรงสัญญาถูกทิ้ง ไม่ทำให้หน้าเว็บพัง
+    expect(broken.errorCodes).toBeUndefined()
+  })
+
   it('เนื้อหา error ที่ไม่ใช่ JSON ได้ code = unknown_error', async () => {
     mockFetch({
       'GET /api/thing/': () => new Response('<html>Bad gateway</html>', { status: 502 }),

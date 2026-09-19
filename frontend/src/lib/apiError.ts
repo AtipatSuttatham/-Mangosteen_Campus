@@ -1,7 +1,8 @@
 // รูปแบบ error ที่ backend ส่งกลับ (สัญญาที่ docs/api-auth.md)
-type ErrorBody = { code?: unknown; detail?: unknown; errors?: unknown }
+type ErrorBody = { code?: unknown; detail?: unknown; errors?: unknown; error_codes?: unknown }
 
 // ข้อผิดพลาดรายฟิลด์ เช่น { identifier: ["..."] } (มาพร้อม code = validation_error)
+// ใช้ชนิดเดียวกันกับ error_codes ที่เป็นรหัสของแต่ละกฎ เช่น { password: ["password_too_short"] }
 export type FieldErrors = Record<string, string[]>
 
 function isFieldErrors(value: unknown): value is FieldErrors {
@@ -20,8 +21,10 @@ export class ApiError extends Error {
   status: number
   /** รหัส error เช่น invalid_credentials, network_error, unknown_error */
   code: string
-  /** ข้อผิดพลาดรายฟิลด์ (เฉพาะ validation_error) */
+  /** ข้อความผิดพลาดรายฟิลด์ (เฉพาะ validation_error) — ไม่แสดงตรง ๆ ให้ใช้ errorCodes แปลแทน */
   errors?: FieldErrors
+  /** รหัสของกฎที่ไม่ผ่านรายฟิลด์ (เฉพาะ validation_error) เช่น password_too_short ใช้เป็นกุญแจแปลข้อความ */
+  errorCodes?: FieldErrors
 
   constructor(
     status: number,
@@ -29,12 +32,14 @@ export class ApiError extends Error {
     message?: string,
     errors?: FieldErrors,
     options?: ErrorOptions,
+    errorCodes?: FieldErrors,
   ) {
     super(message ?? code, options)
     this.name = 'ApiError'
     this.status = status
     this.code = code
     this.errors = errors
+    this.errorCodes = errorCodes
   }
 
   // สร้างจาก response ที่ไม่สำเร็จ (อ่านเนื้อหา JSON ถ้ามี ถ้าไม่ใช่ JSON ให้ code = unknown_error)
@@ -48,6 +53,7 @@ export class ApiError extends Error {
     const code = typeof body.code === 'string' ? body.code : 'unknown_error'
     const detail = typeof body.detail === 'string' ? body.detail : undefined
     const errors = isFieldErrors(body.errors) ? body.errors : undefined
-    return new ApiError(response.status, code, detail, errors)
+    const errorCodes = isFieldErrors(body.error_codes) ? body.error_codes : undefined
+    return new ApiError(response.status, code, detail, errors, undefined, errorCodes)
   }
 }

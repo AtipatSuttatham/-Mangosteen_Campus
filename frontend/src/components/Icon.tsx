@@ -14,6 +14,8 @@ export type IconName =
   | 'logout'
   | 'menu'
   | 'close'
+  | 'mail'
+  | 'check'
 
 const SHAPES: Record<IconName, ReactNode> = {
   grid: (
@@ -78,6 +80,13 @@ const SHAPES: Record<IconName, ReactNode> = {
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3.5 7l8.5 6 8.5-6" />
+    </>
+  ),
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
 }
 
 type IconProps = {

@@ -10,6 +10,12 @@
   "language": {
     "label": "Language"
   },
+  "form": {
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "showPasswordLabel": "Show password",
+    "hidePasswordLabel": "Hide password"
+  },
   "login": {
     "title": "Sign in",
     "subtitle": "Use your student/staff ID or your email",
@@ -18,15 +24,55 @@
     "identifierPlaceholder": "Student/staff ID or email",
     "password": "Password",
     "passwordPlaceholder": "Your password",
-    "showPassword": "Show",
-    "hidePassword": "Hide",
-    "showPasswordLabel": "Show password",
-    "hidePasswordLabel": "Hide password",
     "forgot": "Forgot password",
     "submit": "Sign in",
     "submitting": "Signing in",
     "noAccount": "Don't have an account?",
-    "register": "Sign up with email"
+    "register": "Sign up with email",
+    "resendVerification": "Send the verification link again",
+    "resendWait": "You can send it again in {{seconds}} s",
+    "verificationSent": "If this email isn't verified yet, we've sent you a link"
+  },
+  "register": {
+    "tagline": "Sign up with email and start learning right after you verify",
+    "taglineSub": "Any email domain is welcome. Teacher accounts are created by administrators only",
+    "title": "Sign up",
+    "subtitle": "Accounts you create yourself are student accounts",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "emailPlaceholder": "name@email.com",
+    "password": "Password",
+    "passwordHint": "At least 8 characters, and not an easy-to-guess password",
+    "confirmPassword": "Confirm password",
+    "submit": "Sign up",
+    "submitting": "Signing up",
+    "haveAccount": "Already have an account?",
+    "login": "Sign in"
+  },
+  "checkInbox": {
+    "title": "Check your email",
+    "body": "We sent a verification link to <email>{{email}}</email>. The link works for 24 hours",
+    "noEmail": "Didn't get the email?",
+    "resend": "Send again",
+    "resendWait": "You can send again in {{seconds}} s",
+    "resent": "If you haven't verified yet, we've sent a new link. The previous link no longer works"
+  },
+  "verifyEmail": {
+    "loading": "Verifying your email",
+    "successTitle": "Email verified",
+    "successBody": "Your account is ready. Sign in to see your courses",
+    "login": "Sign in",
+    "invalidTitle": "This link no longer works",
+    "invalidBody": "Links expire and work only once. Enter your email to get a new one",
+    "alreadyVerified": "Already verified?",
+    "email": "Email",
+    "emailPlaceholder": "name@email.com",
+    "send": "Send a new verification link",
+    "sending": "Sending",
+    "sendWait": "You can send again in {{seconds}} s",
+    "sent": "If this email signed up and isn't verified yet, we've sent a new link",
+    "retry": "Try again"
   },
   "roles": {
     "admin": "Administrator",
@@ -105,5 +151,18 @@
       "title": "Something unexpected went wrong",
       "description": "Try again."
     }
+  },
+  "fieldErrors": {
+    "required": "Please fill in this field",
+    "blank": "Please fill in this field",
+    "invalid": "This isn't in the right format",
+    "max_length": "This is too long",
+    "mismatch": "The two passwords don't match",
+    "email_taken": "An account with this email already exists",
+    "password_too_short": "The password is too short. Use at least 8 characters",
+    "password_too_common": "This password is too easy to guess",
+    "password_entirely_numeric": "The password can't be only numbers",
+    "password_too_similar": "The password is too similar to your name or email",
+    "unknown": "This isn't valid"
   }
 }

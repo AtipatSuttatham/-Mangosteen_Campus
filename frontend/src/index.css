@@ -20,6 +20,10 @@
   --color-warn-50: #fbf5e6;
   --color-warn-200: #e8d6a0;
   --color-warn-800: #6b5314;
+  /* สถานะสำเร็จ (เขียว): วงกลมไอคอนและกล่องแจ้งความสำเร็จ — ค่าตามหน้า "ยืนยันอีเมลแล้ว" ใน wireframe */
+  --color-ok-50: #e6efe2;
+  --color-ok-200: #c6dcbd;
+  --color-ok-800: #3f6b36;
 
   --font-serif: 'Taviraj', serif; /* หัวข้อและตัวเลข */
   --font-sans: 'IBM Plex Sans Thai', system-ui, sans-serif; /* เนื้อความและ UI */
