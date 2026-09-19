@@ -1,9 +1,7 @@
-from django.contrib.auth.password_validation import validate_password as run_password_validators
-from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
-from rest_framework.exceptions import ErrorDetail
 
 from .models import User
+from .password_rules import password_rule_errors
 
 
 class LoginSerializer(serializers.Serializer):
@@ -40,27 +38,35 @@ class RegisterSerializer(serializers.Serializer):
             first_name=str(self.initial_data.get("first_name", "")).strip(),
             last_name=str(self.initial_data.get("last_name", "")).strip(),
         )
-        try:
-            run_password_validators(value, user=candidate)
-        except DjangoValidationError as error:
-            # ส่งต่อพร้อม code ของแต่ละกฎ (เช่น password_too_short) ให้ frontend ใช้แปลข้อความ
-            raise serializers.ValidationError(
-                [ErrorDetail(item.messages[0], code=item.code) for item in error.error_list]
-            ) from error
+        # ส่งต่อพร้อม code ของแต่ละกฎ (เช่น password_too_short) ให้ frontend ใช้แปลข้อความ
+        errors = password_rule_errors(value, candidate)
+        if errors:
+            raise serializers.ValidationError(errors)
         return value
 
 
-class VerifyEmailSerializer(serializers.Serializer):
-    """ข้อมูลที่รับตอนยืนยันอีเมล: โทเคนที่หน้าเว็บอ่านจากลิงก์ในอีเมล"""
+class TokenSerializer(serializers.Serializer):
+    """ข้อมูลที่รับเมื่อมีแค่โทเคนจากลิงก์ในอีเมล (ยืนยันอีเมล / ตรวจลิงก์ตั้งรหัสผ่าน)"""
 
     # โทเคนจริงยาวราว 43 ตัวอักษร — จำกัดไว้กันส่งข้อมูลใหญ่มาให้แฮชเปล่า ๆ
     token = serializers.CharField(max_length=256)
 
 
-class ResendVerificationSerializer(serializers.Serializer):
-    """ข้อมูลที่รับตอนขอลิงก์ยืนยันใหม่: อีเมลที่สมัครไว้"""
+class EmailOnlySerializer(serializers.Serializer):
+    """ข้อมูลที่รับเมื่อมีแค่อีเมล (ขอลิงก์ยืนยันใหม่ / ลืมรหัสผ่าน)"""
 
     email = serializers.EmailField(max_length=254)
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    """ข้อมูลที่รับตอนตั้งรหัสผ่านใหม่: โทเคนจากลิงก์ + รหัสผ่านใหม่
+
+    กฎของรหัสผ่านตรวจใน password_reset.reset_password (ต้องรู้ผู้ใช้จากโทเคนก่อนจึงตรวจได้)
+    """
+
+    token = serializers.CharField(max_length=256)
+    # ไม่ตัดช่องว่างของรหัสผ่าน และจำกัดความยาวกันส่งข้อมูลใหญ่เกินมาให้แฮช
+    password = serializers.CharField(max_length=1024, trim_whitespace=False, write_only=True)
 
 
 class UserSerializer(serializers.ModelSerializer):

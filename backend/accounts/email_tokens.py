@@ -65,6 +65,24 @@ def seconds_until_resend(user: User, purpose: str) -> int:
     return max(0, math.ceil(remaining))
 
 
+def peek_token(raw_token: str, purpose: str) -> User:
+    """ตรวจว่าโทเคนยังใช้ได้ไหม โดย "ไม่ใช้ทิ้ง" แล้วคืนผู้ใช้เจ้าของ (ผิดเงื่อนไขโยน error แบบเดียวกับ consume_token)
+
+    ให้หน้าเว็บตรวจลิงก์ตั้งแต่เปิดหน้า (แสดงว่าตั้งรหัสให้บัญชีไหน / บอกทันทีถ้าลิงก์หมดอายุ)
+    การตรวจนี้ไม่การันตีว่ากดส่งภายหลังจะผ่าน (ลิงก์อาจถูกใช้/แทนที่ระหว่างนั้น) ตัวตัดสินจริงคือ consume_token
+    """
+    token = (
+        EmailVerificationToken.objects.select_related("user")
+        .filter(token_hash=hash_token(raw_token), purpose=purpose)
+        .first()
+    )
+    if token is None or token.used_at is not None:
+        raise TokenInvalid
+    if token.expires_at <= timezone.now():
+        raise TokenExpired
+    return token.user
+
+
 def consume_token(raw_token: str, purpose: str) -> User:
     """ตรวจโทเคนจากลิงก์และ "ใช้" มัน (ใช้ได้ครั้งเดียว) แล้วคืนผู้ใช้เจ้าของ
 

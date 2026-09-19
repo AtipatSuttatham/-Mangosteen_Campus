@@ -51,14 +51,16 @@ Mangosteen_Campus/
 │       ├── forms.py            ฟอร์มสร้าง/แก้ผู้ใช้ในหน้า Django admin
 │       ├── admin.py            หน้าจัดการผู้ใช้ใน Django admin (ใช้ชั่วคราวก่อนมีหน้าจัดการจริง)
 │       ├── services.py         หาผู้ใช้จากช่อง login ช่องเดียว (@ = อีเมล) และตรวจรหัสผ่าน
-│       ├── tokens.py           ออก/ตรวจ refresh token (ใส่ role) และตั้ง/ลบ cookie
+│       ├── tokens.py           ออก/ตรวจ refresh token (ใส่ role + ผูกกับรหัสผ่านปัจจุบัน) และตั้ง/ลบ cookie
 │       ├── email_tokens.py     ออก/ใช้โทเคนครั้งเดียวในลิงก์อีเมล (เก็บเฉพาะแฮช), กฎขอลิงก์ใหม่ทุก 60 วินาที
 │       ├── emails.py           ส่งอีเมลลิงก์ยืนยันอีเมล / ตั้งรหัสผ่านใหม่ (ไทย+อังกฤษในฉบับเดียว)
 │       ├── registration.py     ตรรกะสมัครเองด้วยอีเมล / ยืนยันอีเมล / ขอลิงก์ยืนยันใหม่
+│       ├── password_reset.py   ตรรกะลืมรหัสผ่าน: ขอลิงก์ / ตรวจลิงก์ / ตั้งรหัสใหม่ (เซสชันเดิมใช้ไม่ได้)
+│       ├── password_rules.py   ตรวจกฎรหัสผ่านพร้อมรหัส code รายกฎ (ใช้ร่วมตอนสมัครและตั้งรหัสใหม่)
 │       ├── templates/accounts/email/  ข้อความอีเมล: verify_email.txt, reset_password.txt
 │       ├── serializers.py      รูปแบบข้อมูลเข้า-ออกของ login และข้อมูลผู้ใช้
 │       ├── exceptions.py       error ของระบบล็อกอิน (แต่ละตัวมี `code`)
-│       ├── views.py            endpoint: login / refresh / logout / me / register / verify-email / resend-verification
+│       ├── views.py            endpoint: login / refresh / logout / me / register / verify-email / resend-verification / forgot-password / reset-password (+ check)
 │       ├── urls.py             เส้นทางใต้ /api/auth/
 │       ├── management/commands/
 │       │   └── seed_demo.py    คำสั่งสร้าง/รีเซ็ตบัญชีทดสอบ 3 บทบาท (เฉพาะ DEBUG=1, รหัสผ่านจาก DEMO_PASSWORD ใน .env)
@@ -69,7 +71,8 @@ Mangosteen_Campus/
 │       ├── test_seed_demo.py   test คำสั่ง seed_demo (รั้วกัน DEBUG, รหัสผ่าน, รันซ้ำ, ล็อกอินได้จริง)
 │       ├── test_email_tokens.py  test โทเคนในลิงก์อีเมล (ครั้งเดียว, หมดอายุ, ผิดจุดประสงค์, กฎ 60 วินาที)
 │       ├── test_emails.py      test อีเมลยืนยัน/ตั้งรหัสผ่าน (ลิงก์ถูก, ครบสองภาษา)
-│       └── test_registration_api.py  test API สมัคร/ยืนยันอีเมล/ส่งลิงก์ใหม่ (ปกติ + กรณีโจมตี เช่น สมัครทับ, ยกระดับสิทธิ์)
+│       ├── test_registration_api.py  test API สมัคร/ยืนยันอีเมล/ส่งลิงก์ใหม่ (ปกติ + กรณีโจมตี เช่น สมัครทับ, ยกระดับสิทธิ์)
+│       └── test_password_reset_api.py  test API ลืมรหัสผ่าน/ตั้งรหัสใหม่ และเซสชันเก่าตายเมื่อรหัสเปลี่ยน
 │
 └── frontend/               React 19 + Vite + TypeScript + Tailwind v4 (จัดการแพ็กเกจด้วย pnpm)
     ├── package.json          dependency + สคริปต์ (dev / build / typecheck / lint / test)

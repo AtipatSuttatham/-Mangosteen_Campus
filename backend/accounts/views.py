@@ -8,13 +8,15 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .exceptions import InvalidRefreshToken, MissingRequestedWithHeader
+from .password_reset import check_reset_token, request_password_reset, reset_password
 from .registration import register_student, resend_verification, verify_email
 from .serializers import (
+    EmailOnlySerializer,
     LoginSerializer,
     RegisterSerializer,
-    ResendVerificationSerializer,
+    ResetPasswordSerializer,
+    TokenSerializer,
     UserSerializer,
-    VerifyEmailSerializer,
 )
 from .services import authenticate_identifier
 from .tokens import (
@@ -137,7 +139,7 @@ class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = VerifyEmailSerializer(data=request.data)
+        serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         verify_email(serializer.validated_data["token"])
@@ -155,11 +157,66 @@ class ResendVerificationView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = ResendVerificationSerializer(data=request.data)
+        serializer = EmailOnlySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         resend_verification(serializer.validated_data["email"])
         return Response({}, status=status.HTTP_202_ACCEPTED)
+
+
+class ForgotPasswordView(APIView):
+    """POST /api/auth/forgot-password/ — ขอลิงก์ตั้งรหัสผ่านใหม่ทางอีเมล
+
+    ตอบ 202 เหมือนกันทุกกรณี (ไม่มีอีเมลนี้ / ยังไม่ยืนยันอีเมล / บัญชีถูกปิด / ยังไม่พ้น 60 วินาที / ส่งแล้ว)
+    เพื่อไม่ให้ใครใช้ endpoint นี้เดาว่าอีเมลไหนมีบัญชี
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = EmailOnlySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        request_password_reset(serializer.validated_data["email"])
+        return Response({}, status=status.HTTP_202_ACCEPTED)
+
+
+class ResetPasswordCheckView(APIView):
+    """POST /api/auth/reset-password/check/ — ตรวจลิงก์ตั้งรหัสผ่านโดยไม่ใช้โทเคนทิ้ง
+
+    ให้หน้าเว็บ /reset-password ตรวจลิงก์ตั้งแต่เปิดหน้า: แสดงว่าตั้งรหัสให้บัญชีไหน
+    หรือบอกทันทีว่าลิงก์หมดอายุ (ไม่ต้องรอให้กรอกรหัสเสร็จแล้วค่อยเจอ)
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = TokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = check_reset_token(serializer.validated_data["token"])
+        # อีเมลเต็มได้ เพราะผู้ถือโทเคนคือคนที่เปิดกล่องอีเมลนั้นได้อยู่แล้ว
+        return Response({"email": user.email})
+
+
+class ResetPasswordView(APIView):
+    """POST /api/auth/reset-password/ — ตั้งรหัสผ่านใหม่ด้วยโทเคนจากลิงก์
+
+    สำเร็จแล้วเซสชันเดิมทั้งหมดของบัญชีนั้นใช้ไม่ได้ และไม่ล็อกอินให้ (หน้าเว็บพาไปหน้า login)
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+        reset_password(data["token"], data["password"])
+        return Response({})
 
 
 class MeView(RetrieveAPIView):

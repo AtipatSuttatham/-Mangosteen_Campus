@@ -383,7 +383,7 @@ is_published = False (draft)  ──► True (published, นศ.เห็น)  �
 ### W2 — Admin สร้างบัญชีครู
 1. Admin กรอกฟอร์ม → `POST /admin/users` → สร้าง `User(role=teacher, student_or_staff_id=…, created_by=<admin>, is_email_verified=True)`
 2. `Auditable` signal → `AuditLog(action=create, content_type=User, actor=<admin>)`
-3. ส่งอีเมลลิงก์ตั้งรหัสผ่านครั้งแรก = `EmailVerificationToken(purpose=reset_password)` — บัญชีที่ Admin สร้างยังไม่มีรหัสผ่านจนกว่าเจ้าของกดลิงก์ — ลิงก์ที่ Admin ส่งให้ตั้งรหัสผ่านครั้งแรกมีอายุ **7 วัน** (Admin กด "ส่งลิงก์อีกครั้ง" ได้เมื่อหมดอายุ) ส่วนลิงก์ "ลืมรหัสผ่าน" ที่ผู้ใช้ขอเองอายุ **1 ชั่วโมง**
+3. ส่งอีเมลลิงก์ตั้งรหัสผ่านครั้งแรก = `EmailVerificationToken(purpose=reset_password)` — บัญชีที่ Admin สร้างยังไม่มีรหัสผ่านจนกว่าเจ้าของกดลิงก์ — ลิงก์ที่ Admin ส่งให้ตั้งรหัสผ่านครั้งแรกมีอายุ **7 วัน** (Admin กด "ส่งลิงก์อีกครั้ง" ได้เมื่อหมดอายุ) ส่วนลิงก์ "ลืมรหัสผ่าน" ที่ผู้ใช้ขอเองอายุ **1 ชั่วโมง** — endpoint `POST /auth/forgot-password/` ส่งลิงก์เฉพาะบัญชีที่ยืนยันอีเมลแล้ว, `POST /auth/reset-password/` ตั้งรหัสใหม่และทำให้เซสชันเดิมทั้งหมดใช้ไม่ได้ (ดู `docs/api-auth.md`)
 
 ### W3 — สร้างรายวิชา + เพิ่ม co-teacher
 1. teacher → `POST /courses` (term, code, name) → `Course(is_published=False, created_by=<teacher>)` + `CourseTeacher(user=<teacher>, course_role=owner)`
