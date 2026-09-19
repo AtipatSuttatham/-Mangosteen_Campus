@@ -1,4 +1,4 @@
-# ERD — LMS (Mermaid) · v1.3
+# ERD — LMS (Mermaid) · v1.4
 
 > ประกอบกับ [`database.md`](./database.md) — แยก diagram ตามโดเมนเพื่อให้อ่านง่าย
 > GitHub render Mermaid ในไฟล์ `.md` ได้โดยตรง
@@ -55,7 +55,7 @@ erDiagram
     EMAIL_VERIFICATION_TOKEN {
         bigint   id PK
         bigint   user_id FK
-        string   token UK
+        string   token_hash UK "SHA-256 ของโทเคน"
         string   purpose "verify_email|reset_password"
         datetime expires_at
         datetime used_at "nullable"

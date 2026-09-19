@@ -1,11 +1,12 @@
 # เอกสารออกแบบฐานข้อมูล — LMS
 
-> สถานะ: **freeze แล้ว (v1.3)** — ผ่านรีวิวเชิงวิจารณ์ 2 รอบ (2026-09-09)
-> อัปเดตล่าสุด: 2026-09-09
+> สถานะ: **freeze แล้ว (v1.4)** — ผ่านรีวิวเชิงวิจารณ์ 2 รอบ (2026-09-09) + ปรับ v1.4 ตามการตัดสินใจของผู้ใช้
+> อัปเดตล่าสุด: v1.4 (ดูรายการที่ §11 "รีวิว v1.4")
 >
 > **v1.1** = ยกเลิกการแยก `_th/_en` ทั้งหมด
 > **v1.2** = เส้นแบ่ง hard-delete ชัดขึ้น, soft-delete ใช้ conditional unique, สูตร weighted total เขียนใหม่ (นับข้อที่ไม่ทำ = 0), `is_graded` บน Quiz/Assignment, `Assignment.due_at` nullable + `accept_until`, กลไก AuditLog กันเขียนซ้ำ, มาตรฐาน Decimal precision
 > **v1.3** = ปิดขอบ hard-delete ที่เหลือ (User ไม่ลบจริง + `student`/`grade_item` FK → PROTECT), `GradingCategory` → PROTECT, `matching` ให้คะแนนบางส่วน, กลไก sync คะแนน submission/attempt → Score, `due_at` timed quiz เทียบ `available_until`
+> **v1.4** = `EmailVerificationToken.token` → `token_hash` (เก็บ SHA-256 ไม่เก็บโทเคนจริง), กฎ normalize `User.email` (ตัวพิมพ์เล็ก) และ `User.student_or_staff_id` (ตัดช่องว่างหัวท้าย แยกตัวพิมพ์ ห้ามมี `@`), รูปแบบ `Course.invite_code`
 
 เอกสารนี้กำหนด "แผนที่" ของ data model ทั้งระบบก่อนเริ่ม code ตามที่ระบุใน `CLAUDE.md`
 (หัวข้อ "Data Model — การตัดสินใจสำคัญ") field ปลีกย่อยยังปรับได้ภายหลังด้วย migration
@@ -65,8 +66,8 @@ backend/
 
 | field | type | หมายเหตุ |
 |---|---|---|
-| `email` | Email, **unique**, required | ใช้ login ได้ (ช่องทางสมัครเอง) |
-| `student_or_staff_id` | Char, **unique**, `null=True` | รหัส นศ./พนักงาน — ใช้ login ได้ (ช่องทาง Admin สร้าง) นศ.สมัครเองอาจยังไม่มี |
+| `email` | Email, **unique**, required | ใช้ login ได้ (ช่องทางสมัครเอง) — **เก็บเป็นตัวพิมพ์เล็กเสมอ** (แปลงก่อนบันทึก) จึงห้ามซ้ำแบบไม่สนตัวพิมพ์ (v1.4) |
+| `student_or_staff_id` | Char, **unique**, `null=True` | รหัส นศ./พนักงาน — ใช้ login ได้ (ช่องทาง Admin สร้าง) นศ.สมัครเองอาจยังไม่มี. **กฎ (v1.4):** ตัดช่องว่างหัวท้ายก่อนบันทึก, **แยกตัวพิมพ์เล็ก/ใหญ่** (`S123` ≠ `s123`), ห้ามมีอักขระ `@` (ใช้แยกจากอีเมลตอน login), ถ้าไม่มีรหัสต้องเป็น `NULL` ไม่ใช่สตริงว่าง (กัน unique ชนกัน) |
 | `role` | Char choices: `admin` / `teacher` / `student` | เก็บใน token claims ด้วย |
 | `first_name`, `last_name` | Char | ชื่อที่ผู้ใช้กรอก (ภาษาใดก็ได้) |
 | `first_name_en`, `last_name_en` | Char, blank | ชื่ออังกฤษ (optional) สำหรับเอกสาร/รายชื่อทางการ |
@@ -91,7 +92,7 @@ backend/
 | field | type | หมายเหตุ |
 |---|---|---|
 | `user` | FK → `User`, `CASCADE` | |
-| `token` | Char (random / uuid4), unique | |
+| `token_hash` | Char(64), unique | SHA-256 (hex) ของโทเคนสุ่ม — สร้างโทเคนด้วย `secrets.token_urlsafe(32)` แล้วส่งทางอีเมลเท่านั้น **ไม่เก็บโทเคนจริงใน DB** ตอนตรวจลิงก์ให้แฮชโทเคนที่ได้รับแล้วหาด้วย `token_hash` (v1.4) |
 | `purpose` | Char choices: `verify_email` / `reset_password` | |
 | `expires_at` | datetime | เช่น +24 ชม. (verify), +1 ชม. (reset) |
 | `used_at` | datetime, `null=True` | ใช้แล้วใช้ซ้ำไม่ได้ |
@@ -121,7 +122,7 @@ backend/
 | `name` | Char | ชื่อวิชา (ภาษาใดก็ได้) |
 | `description` | Text, blank | |
 | `self_enroll_enabled` | Bool, default `False` | เปิดให้ลงทะเบียนเองด้วยรหัสไหม |
-| `invite_code` | Char, unique, `null=True` | รหัสเข้าเรียน (generate เมื่อเปิด self-enroll) |
+| `invite_code` | Char, unique, `null=True` | รหัสเข้าเรียน (generate เมื่อเปิด self-enroll). **รูปแบบ (v1.4):** 8 ตัวอักษรจาก `A–Z` (ตัด `I` `L` `O`) และ `2–9` (ตัด `0` `1`) รวม 31 ตัวอักษร เก็บเป็นตัวพิมพ์ใหญ่ไม่มีขีด แสดงเป็น `XXXX-XXXX` ตอนผู้เรียนกรอกไม่สนตัวพิมพ์เล็ก/ใหญ่และตัดช่องว่าง/ขีดออกก่อนเทียบ |
 | `is_published` | Bool, default `False` | นักศึกษาเห็น/เข้าได้เมื่อ `True` |
 | `created_by` | FK → `User`, `SET_NULL`, `null=True` | |
 | — | unique_together | `(term, code, section)` |
@@ -286,7 +287,7 @@ backend/
 
 **Timed quiz — การบังคับฝั่ง backend** (ตาม `CLAUDE.md` หัวข้อ security):
 - ทุกครั้งที่ save คำตอบ / submit → เช็ค `now() <= due_at` ; ถ้าเลย → ปฏิเสธคำตอบใหม่ แล้ว auto-submit ด้วยคำตอบที่มีอยู่ (`status = auto_submitted`)
-- attempt ที่ค้าง `in_progress` เกินเวลา → finalize แบบ lazy ตอนมีการเข้าถึง หรือด้วย scheduled job (พิจารณาตอน implement)
+- attempt ที่ค้าง `in_progress` เกินเวลา → finalize ด้วย **ตัวตั้งเวลา** (คำสั่ง management ที่รันซ้ำได้อย่างปลอดภัย รันทุกนาที) เป็นหลัก + finalize แบบ lazy ตอนมีการเข้าถึงเป็นตาข่ายรอง (ตัดสินใจใน v1.4; ตัวรันจริงเลือกตอนเลือก hosting) — การปฏิเสธคำตอบหลัง `due_at` ทำที่ทุก request อยู่แล้ว ตัวตั้งเวลามีผลแค่ว่าคะแนนออกเมื่อไหร่
 - **ตอน submit / auto-submit → สร้างแถว `Answer` ให้ครบทุก `Question` ในชุด** ข้อที่ นศ. ไม่ได้ตอบ = `Answer` ที่ `response` ว่าง, `is_correct=False`, `points_awarded=0` (v1.2 — ข้อ 1) เพื่อให้รายงาน/สถิติต่อข้อครบ
 
 ### `Answer` (1 คำตอบต่อ 1 คำถาม ต่อ 1 attempt)
@@ -511,7 +512,7 @@ Course
 | field | type | หมายเหตุ |
 |---|---|---|
 | `recipient` | FK → `User`, `CASCADE` | ผู้รับ |
-| `notification_type` | Char choices: `submission_graded` / `quiz_graded` / `assignment_published` / `quiz_published` / `announcement_posted` / `due_soon` / `enrolled` | ชนิด event (เพิ่มได้ภายหลัง) |
+| `notification_type` | Char choices: `submission_graded` / `quiz_graded` / `assignment_published` / `quiz_published` / `announcement_posted` / `due_soon` / `enrolled` | ชนิด event (เพิ่มได้ภายหลัง) — `due_soon` คงไว้ใน choices แต่ **MVP ไม่สร้างแถว** (คำนวณสดตอนเปิดแอปแทน, v1.4) |
 | `context` | JSON | พารามิเตอร์สำหรับ render ข้อความ เช่น `{"course_name": "...", "item_title": "...", "score": 8}` — frontend ประกอบข้อความจาก translation key ตาม `notification_type` (i18n ไม่ต้องเก็บ `_th/_en`) |
 | `link_url` | Char | path ใน SPA ที่กดแล้วไป เช่น `/courses/12/assignments/5` |
 | `is_read` | Bool, default `False` | |
@@ -587,6 +588,19 @@ Course
 | timed quiz | `QuizAttempt.due_at = min(started_at + limit, Quiz.available_until)` |
 | CourseGrade | เป็น cache ; source of truth = คำนวณสด ; รายการ invalidate ครบขึ้น |
 | FK hardening | `QuizAttempt.quiz` / `Submission.assignment` → `PROTECT` |
+
+### รีวิว v1.4 (ตามการตัดสินใจของผู้ใช้)
+
+| ประเด็น | ✅ สรุป |
+|---|---|
+| โทเคนยืนยันอีเมล/ตั้งรหัสผ่าน | เก็บ **SHA-256 ของโทเคน** (`token_hash`) แทนตัวโทเคนจริง — ฐานข้อมูลรั่วก็ใช้ลิงก์ไม่ได้ |
+| อีเมล | เก็บตัวพิมพ์เล็กเสมอ ห้ามซ้ำแบบไม่สนตัวพิมพ์ |
+| รหัสนักศึกษา/พนักงาน | ตัดช่องว่างหัวท้าย **แยกตัวพิมพ์** ห้ามมี `@` ไม่มีรหัส = `NULL` |
+| บัญชีที่ Admin สร้าง | `is_email_verified=True` ตั้งแต่สร้าง (คงตาม W2) แต่ยังไม่มีรหัสผ่านจนกว่าเจ้าของกดลิงก์ตั้งรหัสผ่าน |
+| รหัสเข้าเรียน | 8 ตัวอักษร ตัดตัวที่สับสน แสดงเป็น `XXXX-XXXX` กรอกแบบไม่สนตัวพิมพ์ |
+| ส่งควิซอัตโนมัติเมื่อหมดเวลา | ใช้ **ตัวตั้งเวลา** (คำสั่งที่รันซ้ำได้อย่างปลอดภัย) + ตรวจตอนมีคนเข้าถึงเป็นตาข่ายรอง — ไม่กระทบ schema |
+| แจ้งเตือน `due_soon` | คำนวณสดตอนเปิดแอป ไม่สร้างแถว `Notification` ล่วงหน้า (ตัด `due_soon` ออกจาก MVP) — ไม่กระทบ schema |
+| อายุโทเคน / สิทธิ์ | access 15 นาที, refresh 7 วัน (หมุนเวียน + blacklist); role ใน token ใช้แสดงเมนู ส่วนสิทธิ์จริง backend ตรวจจาก DB ทุกครั้ง |
 
 **ปรับภายหลังได้** (migration ปกติ): field ใด ๆ, ตารางใหม่, choice เพิ่ม
 **ปรับยาก / เลี่ยง**: เปลี่ยน cardinality ของ FK, เปลี่ยนชนิด PK (Q6 = ถาวร)

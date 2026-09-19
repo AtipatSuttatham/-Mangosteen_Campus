@@ -1,4 +1,4 @@
-# คู่มือการใช้งานฐานข้อมูล — LMS (v1.3)
+# คู่มือการใช้งานฐานข้อมูล — LMS (v1.4)
 
 > เอกสารนี้ตอบว่า **แต่ละตารางใช้ทำอะไร ใครเขียน ใครอ่าน เชื่อมกับอะไร และ workflow ครบวงจรเป็นยังไง**
 > ใช้คู่กับ:
@@ -64,7 +64,7 @@ Quiz/Assignment  --publish (is_graded)-->  GradeItem  --(นศ.ทำ+ตรว
   - `is_staff`/`is_superuser` — Django admin เท่านั้น คนละเรื่องกับ `role`
 
 #### `EmailVerificationToken`
-- **หน้าที่**: โทเคนแบบใช้ครั้งเดียวสำหรับ (1) ยืนยันอีเมลตอนสมัคร (2) รีเซ็ตรหัสผ่าน
+- **หน้าที่**: โทเคนแบบใช้ครั้งเดียวสำหรับ (1) ยืนยันอีเมลตอนสมัคร (2) ตั้ง/รีเซ็ตรหัสผ่าน (รวมบัญชีที่ Admin สร้างให้) — เก็บเฉพาะค่าแฮช `token_hash` ตัวโทเคนจริงมีแค่ในลิงก์ที่ส่งทางอีเมล
 - **เขียนโดย**: register endpoint, "resend verification", "forgot password" endpoint
 - **อ่านโดย**: verify endpoint (`GET /verify?token=…`), reset-password endpoint
 - **lifecycle**: สร้าง (มี `expires_at`) → ผู้ใช้กดลิงก์ → ตั้ง `used_at` → ใช้ซ้ำไม่ได้. โทเคนหมดอายุ/ใช้แล้ว = cleanup job ลบทีหลัง
@@ -307,7 +307,7 @@ Quiz/Assignment  --publish (is_graded)-->  GradeItem  --(นศ.ทำ+ตรว
 #### `Notification`
 - **หน้าที่**: แจ้งเตือนรายบุคคลจาก event ระบบ (ตรวจงานเสร็จ, มีงานใหม่, ใกล้ครบกำหนด, ถูก enroll) — **web ล้วน MVP ไม่ส่งออกนอก**
 - **เขียนโดย**: **service layer / signal** ตอนเกิด event — ตั้ง `recipient`, `notification_type`, `context` (params), `link_url`
-  - `due_soon` ต้องมี **scheduled job** สแกน assignment/quiz ที่ใกล้ครบกำหนด
+  - `due_soon`: **MVP ไม่สร้างแถว** — หน้า dashboard คำนวณ "งานที่ต้องทำเร็ว ๆ นี้" สดตอนเปิดแอป (ตัดสินใจใน v1.4; ถ้าจะสร้างแถวภายหลังต้องมี scheduled job สแกน)
 - **อ่านโดย**: frontend (กระดิ่ง 🔔 + นับ `is_read=False`) ; frontend ประกอบข้อความจาก translation key ตาม `notification_type` + `context`
 - **lifecycle**: สร้าง → นศ.เปิด → `is_read=True`, `read_at` ; cleanup job ลบที่อ่านแล้ว > N วัน
 - **สำคัญ**: `context` เป็น JSON params ไม่ใช่ข้อความสำเร็จรูป → i18n อยู่ที่ frontend. **ไม่ audit**
@@ -383,7 +383,7 @@ is_published = False (draft)  ──► True (published, นศ.เห็น)  �
 ### W2 — Admin สร้างบัญชีครู
 1. Admin กรอกฟอร์ม → `POST /admin/users` → สร้าง `User(role=teacher, student_or_staff_id=…, created_by=<admin>, is_email_verified=True)`
 2. `Auditable` signal → `AuditLog(action=create, content_type=User, actor=<admin>)`
-3. (option) ส่งอีเมลตั้งรหัสผ่านครั้งแรก = `EmailVerificationToken(purpose=reset_password)`
+3. ส่งอีเมลลิงก์ตั้งรหัสผ่านครั้งแรก = `EmailVerificationToken(purpose=reset_password)` — บัญชีที่ Admin สร้างยังไม่มีรหัสผ่านจนกว่าเจ้าของกดลิงก์ (อายุลิงก์: รอผู้ใช้ตัดสินใจ)
 
 ### W3 — สร้างรายวิชา + เพิ่ม co-teacher
 1. teacher → `POST /courses` (term, code, name) → `Course(is_published=False, created_by=<teacher>)` + `CourseTeacher(user=<teacher>, course_role=owner)`
@@ -473,7 +473,7 @@ is_published = False (draft)  ──► True (published, นศ.เห็น)  �
 1. event เกิด (เช่น W12 ตรวจงานเสร็จ) → service สร้าง `Notification(recipient=<นศ.>, notification_type=submission_graded, context={course_name, assignment_title, score}, link_url=/courses/12/assignments/5)`
 2. frontend poll/refresh กระดิ่ง → แสดง count `is_read=False`
 3. นศ. กด → navigate ตาม `link_url` + `PATCH` → `is_read=True`, `read_at`
-4. job: `due_soon` — cron สแกน assignment/quiz ที่ `due_at` ใน 24 ชม. → สร้าง Notification ให้ นศ.ที่ยังไม่ส่ง
+4. (ยังไม่ทำใน MVP) `due_soon` — จะใช้ cron สแกนงานที่ `due_at` ใน 24 ชม. แล้วสร้าง Notification ภายหลัง ตอนนี้ dashboard คำนวณสดแทน
 
 ### W16 — Admin impersonation
 1. Admin → `POST /admin/impersonate` (target_user) → `log_action(action=impersonate_start, actor=<admin>, object=target)`

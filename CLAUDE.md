@@ -66,7 +66,7 @@
 
 ## Data Model — การตัดสินใจสำคัญ (ตัดสินใจไว้ก่อนเริ่ม code)
 
-> **เอกสารออกแบบฐานข้อมูลฉบับเต็มอยู่ที่ `docs/`** (v1.3 freeze แล้ว) — เริ่มอ่านที่ `docs/database-guide.md` (ใครเขียน/ใครอ่าน/workflow ครบวงจร) แล้วดู `docs/database.md` (สเปก field/constraint), `docs/database-erd.md` (ERD), `docs/database-fields.md` (quick ref). หัวข้อด้านล่างเป็นเพียงสรุปการตัดสินใจหลัก ถ้ามีรายละเอียดขัดกันให้ยึด `docs/` และถามผู้ใช้
+> **เอกสารออกแบบฐานข้อมูลฉบับเต็มอยู่ที่ `docs/`** (v1.4 freeze แล้ว) — เริ่มอ่านที่ `docs/database-guide.md` (ใครเขียน/ใครอ่าน/workflow ครบวงจร) แล้วดู `docs/database.md` (สเปก field/constraint), `docs/database-erd.md` (ERD), `docs/database-fields.md` (quick ref). หัวข้อด้านล่างเป็นเพียงสรุปการตัดสินใจหลัก ถ้ามีรายละเอียดขัดกันให้ยึด `docs/` และถามผู้ใช้
 
 - **Enrollment**: รองรับทั้ง 2 แบบ — (1) Admin/Teacher เป็นคน assign นักศึกษาเข้ารายวิชา และ (2) นักศึกษาลงทะเบียนเองด้วยรหัสวิชา (course code/invite code) ต้องมี model `Enrollment` แยกจาก `Course` และ `User` (many-to-many ผ่าน model กลาง)
   - **Invite code**: ระบบสุ่มให้อัตโนมัติ (ไม่ให้ผู้สอนพิมพ์เอง) ผู้สอนสามารถ regenerate รหัสใหม่ได้ภายหลังหากต้องการ
