@@ -20,6 +20,16 @@ Docker Desktop · [uv](https://docs.astral.sh/uv/) · Node.js 22+ · [pnpm](http
    - `migrate` สร้างตารางในฐานข้อมูล (รันครั้งแรกและทุกครั้งที่มี migration ใหม่)
    - สร้างผู้ดูแลระบบคนแรกด้วย `uv run --env-file ../.env python manage.py createsuperuser`
      แล้วเข้าหน้าจัดการที่ http://localhost:8010/admin/ (ใช้ชั่วคราวจนกว่าจะมีหน้าจัดการผู้ใช้จริง)
+   - สร้างบัญชีทดสอบครบ 3 บทบาท: ตั้ง `DEMO_PASSWORD=รหัสที่คุณเลือก` ใน `.env` (ยาวอย่างน้อย 12 ตัวอักษร)
+     แล้วรัน `uv run --env-file ../.env python manage.py seed_demo` (รันซ้ำได้ — จะรีเซ็ตบัญชีเหล่านี้ให้ตรงเดิม)
+
+     | บทบาท | รหัส | อีเมล |
+     |---|---|---|
+     | ผู้ดูแลระบบ | `ADM001` | `admin.demo@mangosteen.test` |
+     | ผู้สอน | `TCH001` | `teacher.demo@mangosteen.test` |
+     | ผู้เรียน | `6501001` | `student.demo@mangosteen.test` |
+
+     ล็อกอินที่ http://localhost:5180/login ด้วยรหัสหรืออีเมลก็ได้ — คำสั่งนี้ทำงานเฉพาะเมื่อ `DJANGO_DEBUG=1` (ห้ามใช้บนเว็บจริง)
 4. **รัน frontend** (โฟลเดอร์ `frontend/`)
    ```
    pnpm install

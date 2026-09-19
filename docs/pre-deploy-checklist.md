@@ -14,7 +14,7 @@
    - `CSRF_TRUSTED_ORIGINS` เป็นโดเมนจริง
    - รัน `uv run python manage.py check --deploy` ให้ไม่เหลือคำเตือน
 3. **cookie ของ refresh token:** ตั้ง Secure อัตโนมัติเมื่อ `DEBUG=0` — ตรวจว่า hosting ที่เลือกส่งต่อ `Set-Cookie` และ path `/api/auth/` ผ่าน proxy ได้ และเว็บกับ API เป็น same-site (`docs/api-auth.md`)
-4. **ไม่มีบัญชีทดสอบ:** ไม่รัน `seed_demo` บนเว็บจริง (คำสั่งมีรั้วกันให้ทำงานเฉพาะ DEBUG=1 — จะทำในก้อน b5) และสร้างผู้ดูแลระบบจริงด้วย `createsuperuser`
+4. **ไม่มีบัญชีทดสอบ:** ไม่รัน `seed_demo` บนเว็บจริง (คำสั่งมีรั้วกันให้ทำงานเฉพาะ DEBUG=1 และต้องมี `DEMO_PASSWORD` — ไม่ตั้งค่านี้บนเว็บจริง) และสร้างผู้ดูแลระบบจริงด้วย `createsuperuser`
 5. **repo เป็น public:** ตรวจอีกครั้งว่าไม่มีความลับในประวัติ git และไม่มี `.env` ที่ถูก commit (ตอนนี้ตรวจแล้วไม่มี)
 
 ## ข้อมูลและงานเบื้องหลัง

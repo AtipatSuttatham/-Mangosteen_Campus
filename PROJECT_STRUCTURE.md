@@ -54,10 +54,13 @@ Mangosteen_Campus/
 │       ├── exceptions.py       error ของระบบล็อกอิน (แต่ละตัวมี `code`)
 │       ├── views.py            endpoint: login / refresh / logout / me
 │       ├── urls.py             เส้นทางใต้ /api/auth/
+│       ├── management/commands/
+│       │   └── seed_demo.py    คำสั่งสร้าง/รีเซ็ตบัญชีทดสอบ 3 บทบาท (เฉพาะ DEBUG=1, รหัสผ่านจาก DEMO_PASSWORD ใน .env)
 │       ├── migrations/         migration ของแอปนี้ (0001 = ตารางผู้ใช้ ซึ่งเป็น migration แรกของโปรเจกต์)
 │       ├── test_models.py      test กฎของ User (normalize อีเมล/รหัส, unique, constraint ของฐานข้อมูล)
 │       ├── test_admin.py       test หน้า admin และคำสั่ง createsuperuser
-│       └── test_auth_api.py    test API ล็อกอินทั้งชุด (ปกติ + กรณีโจมตี)
+│       ├── test_auth_api.py    test API ล็อกอินทั้งชุด (ปกติ + กรณีโจมตี)
+│       └── test_seed_demo.py   test คำสั่ง seed_demo (รั้วกัน DEBUG, รหัสผ่าน, รันซ้ำ, ล็อกอินได้จริง)
 │
 └── frontend/               React 19 + Vite + TypeScript + Tailwind v4 (จัดการแพ็กเกจด้วย pnpm)
     ├── package.json          dependency + สคริปต์ (dev / build / typecheck / lint / test)
