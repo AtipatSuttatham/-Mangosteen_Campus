@@ -56,3 +56,15 @@ class TokenExpired(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "ลิงก์หมดอายุแล้ว"
     default_code = "token_expired"
+
+
+class EmailTaken(APIException):
+    """สมัครด้วยอีเมลที่มีบัญชีใช้งานอยู่แล้ว (ยืนยันแล้ว หรือถูก Admin ปิดบัญชีไว้)
+
+    บอกตรง ๆ ตามที่ผู้ใช้ตัดสินใจ (ตัวเลือก ก): ผู้สมัครรู้ทันทีว่าต้องเข้าสู่ระบบหรือกดลืมรหัสผ่านแทน
+    แลกกับการที่คนนอกใช้หน้าสมัครไล่เช็กได้ว่าอีเมลไหนมีบัญชี (บันทึกใน docs/api-auth.md)
+    """
+
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "อีเมลนี้ถูกใช้สมัครแล้ว"
+    default_code = "email_taken"

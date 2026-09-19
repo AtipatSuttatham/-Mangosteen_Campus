@@ -377,7 +377,7 @@ is_published = False (draft)  ──► True (published, นศ.เห็น)  �
 
 ### W1 — สมัครเอง + ยืนยันอีเมล
 1. `POST /auth/register` (email + password) → สร้าง `User(role=student, is_email_verified=False)` + `EmailVerificationToken(purpose=verify_email)` → ส่งอีเมล (dev = console)
-2. นศ. กดลิงก์ → `GET /auth/verify?token=…` → เช็ค `expires_at`/`used_at` → ตั้ง `User.is_email_verified=True` + `token.used_at`
+2. นศ. กดลิงก์ → หน้าเว็บ `/verify-email?token=…` เรียก `POST /auth/verify-email/` (ใช้ POST ไม่ใช่ GET เพราะโปรแกรมสแกนอีเมลเปิดลิงก์ล่วงหน้า) → เช็ค `expires_at`/`used_at` → ตั้ง `User.is_email_verified=True` + `token.used_at`
 3. login ได้เมื่อ `is_email_verified=True`
 
 ### W2 — Admin สร้างบัญชีครู

@@ -8,7 +8,14 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .exceptions import InvalidRefreshToken, MissingRequestedWithHeader
-from .serializers import LoginSerializer, UserSerializer
+from .registration import register_student, resend_verification, verify_email
+from .serializers import (
+    LoginSerializer,
+    RegisterSerializer,
+    ResendVerificationSerializer,
+    UserSerializer,
+    VerifyEmailSerializer,
+)
 from .services import authenticate_identifier
 from .tokens import (
     REFRESH_COOKIE_NAME,
@@ -102,6 +109,57 @@ class LogoutView(APIView):
         response = Response(status=status.HTTP_204_NO_CONTENT)
         clear_refresh_cookie(response)
         return response
+
+
+class RegisterView(APIView):
+    """POST /api/auth/register/ — สมัครเองด้วยอีเมล (ได้บัญชีผู้เรียนที่ต้องยืนยันอีเมลก่อนใช้งาน)"""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        register_student(**serializer.validated_data)
+        # 202 = รับเรื่องแล้ว รออีเมลยืนยัน (ยังไม่ล็อกอินให้ และไม่ส่งข้อมูลบัญชีกลับ)
+        return Response({}, status=status.HTTP_202_ACCEPTED)
+
+
+class VerifyEmailView(APIView):
+    """POST /api/auth/verify-email/ — ยืนยันอีเมลด้วยโทเคนจากลิงก์
+
+    ใช้ POST ไม่ใช่ GET: โปรแกรมสแกนลิงก์ของอีเมลหลายเจ้าเปิดลิงก์ล่วงหน้า ถ้าเป็น GET
+    ลิงก์จะถูกใช้ไปก่อนที่ผู้ใช้กด หน้าเว็บ /verify-email จึงอ่านโทเคนจากลิงก์แล้วเรียก POST เอง
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = VerifyEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        verify_email(serializer.validated_data["token"])
+        return Response({"email_verified": True})
+
+
+class ResendVerificationView(APIView):
+    """POST /api/auth/resend-verification/ — ขอลิงก์ยืนยันอีเมลใหม่
+
+    ตอบ 202 เหมือนกันทุกกรณี (ไม่มีอีเมลนี้ / ยืนยันแล้ว / ยังไม่พ้น 60 วินาที / ส่งแล้ว)
+    เพื่อไม่ให้ใครใช้ endpoint นี้เดาว่าอีเมลไหนมีบัญชี
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ResendVerificationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        resend_verification(serializer.validated_data["email"])
+        return Response({}, status=status.HTTP_202_ACCEPTED)
 
 
 class MeView(RetrieveAPIView):

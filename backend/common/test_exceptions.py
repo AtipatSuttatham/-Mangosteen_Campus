@@ -1,4 +1,9 @@
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
+from rest_framework.exceptions import (
+    ErrorDetail,
+    NotAuthenticated,
+    PermissionDenied,
+    ValidationError,
+)
 
 from common.exceptions import api_exception_handler
 
@@ -25,6 +30,20 @@ def test_handler_wraps_validation_errors():
     assert response.status_code == 400
     assert response.data["code"] == "validation_error"
     assert response.data["errors"] == {"identifier": ["ต้องกรอก"]}
+
+
+def test_handler_adds_error_codes_per_field_for_validation_errors():
+    # error_codes มีโครงเดียวกับ errors แต่เป็นรหัสของแต่ละกฎ ให้ frontend แปลข้อความรายกฎได้
+    exc = ValidationError(
+        {"password": [ErrorDetail("สั้นไป", code="password_too_short")], "email": ["ผิด"]}
+    )
+
+    response = api_exception_handler(exc, context={})
+
+    assert response.data["error_codes"] == {
+        "password": ["password_too_short"],
+        "email": ["invalid"],
+    }
 
 
 def test_handler_ignores_non_api_exceptions():
