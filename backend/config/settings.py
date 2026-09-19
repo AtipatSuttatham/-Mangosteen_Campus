@@ -5,6 +5,7 @@
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,15 +44,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    # ตารางบันทึก refresh token ที่ถูกเพิกถอนแล้ว (ออกจากระบบ / ถูกหมุนเวียนแทนที่)
+    "rest_framework_simplejwt.token_blacklist",
     "common",
     "accounts",
 ]
 
 # ใช้โมเดลผู้ใช้ของโปรเจกต์ (accounts.User) แทนของ Django — ต้องตั้งก่อน migrate ครั้งแรก
 AUTH_USER_MODEL = "accounts.User"
-
-# ฟอร์มที่รับ URL โดยไม่ระบุ http/https ให้ถือเป็น https (ค่านี้จะเป็นค่าเริ่มต้นของ Django 6.0)
-FORMS_URLFIELD_ASSUME_HTTPS = True
 
 # middleware ที่ทุก request ผ่านตามลำดับ (session/csrf ยังจำเป็นสำหรับหน้า Django admin)
 MIDDLEWARE = [
@@ -123,8 +123,23 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ไม่ตั้ง CORS: frontend เรียก /api ผ่าน proxy (Vite ตอน dev / hosting ตอน deploy) จึงเป็น origin เดียวกัน
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
-    # ก้อนถัดไป (ระบบ login) จะเพิ่ม JWT ที่นี่ — ตอนนี้ยังไม่มีวิธียืนยันตัวตน
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    # ยืนยันตัวตนด้วย access token (JWT) ที่ส่งมาใน header "Authorization: Bearer ..."
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
     # ปลอดภัยไว้ก่อน: endpoint ต้อง login เสมอ ยกเว้นระบุ AllowAny เป็นรายตัว
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    # ทุก error ของ API มีฟิลด์ "code" ให้ frontend ใช้แปลข้อความเป็นไทย/อังกฤษ
+    "EXCEPTION_HANDLER": "common.exceptions.api_exception_handler",
+}
+
+# JWT: access token อายุสั้น (เก็บในหน่วยความจำของเว็บ) + refresh token อายุ 7 วัน (เก็บใน httpOnly cookie)
+# การหมุนเวียน refresh token ทำเองใน accounts/tokens.py (ออก token ใหม่จากข้อมูลผู้ใช้ปัจจุบันทุกครั้ง)
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    # ไม่ให้ simplejwt หมุนเวียนเอง เพราะจะคัดลอก claim เดิม (เช่น role เก่า) ไปทุกครั้ง
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
 }

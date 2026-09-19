@@ -36,7 +36,9 @@ Mangosteen_Campus/
 │   ├── common/               แอปกลางที่ใช้ร่วมกัน
 │   │   ├── models.py           abstract model กลาง: TimeStampedModel (Auditable / SoftDeleteModel จะเพิ่มภายหลัง)
 │   │   ├── views.py            health check (`GET /api/health/`)
-│   │   └── test_health.py      test ของ health check
+│   │   ├── test_health.py      test ของ health check
+│   │   ├── exceptions.py       ตัวจัดการ error ของ API ทั้งระบบ — ทุก error มี `code` ให้ frontend ใช้แปลภาษา
+│   │   └── test_exceptions.py  test ของตัวจัดการ error
 │   └── accounts/             บัญชีผู้ใช้ (ต่อไปคือล็อกอิน/สมัคร/ยืนยันอีเมล)
 │       ├── models.py           User แบบกำหนดเอง (อีเมลเป็นตัวล็อกอิน + รหัสนักศึกษา/พนักงาน + role) พร้อม constraint
 │       ├── roles.py            บทบาทระดับระบบ: admin / teacher / student
