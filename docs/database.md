@@ -94,7 +94,7 @@ backend/
 | `user` | FK → `User`, `CASCADE` | |
 | `token_hash` | Char(64), unique | SHA-256 (hex) ของโทเคนสุ่ม — สร้างโทเคนด้วย `secrets.token_urlsafe(32)` แล้วส่งทางอีเมลเท่านั้น **ไม่เก็บโทเคนจริงใน DB** ตอนตรวจลิงก์ให้แฮชโทเคนที่ได้รับแล้วหาด้วย `token_hash` (v1.4) |
 | `purpose` | Char choices: `verify_email` / `reset_password` | |
-| `expires_at` | datetime | เช่น +24 ชม. (verify), +1 ชม. (reset) |
+| `expires_at` | datetime, **บังคับ** (ไม่มีโทเคนที่ไม่หมดอายุ) | ผู้สร้างโทเคนกำหนดตามกรณี (v1.4): ยืนยันอีเมลตอนสมัคร +24 ชม. · ลิงก์ตั้งรหัสผ่านที่ Admin ส่งให้บัญชีใหม่ **+7 วัน** · "ลืมรหัสผ่าน" ที่ผู้ใช้ขอเอง +1 ชม. (สองกรณีหลังใช้ `purpose=reset_password` เหมือนกัน ต่างกันที่ `expires_at` จึงไม่ต้องเพิ่ม field) |
 | `used_at` | datetime, `null=True` | ใช้แล้วใช้ซ้ำไม่ได้ |
 
 ---
