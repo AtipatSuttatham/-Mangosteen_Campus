@@ -68,22 +68,27 @@ Mangosteen_Campus/
     ├── public/
     │   └── favicon.svg       ไอคอนแท็บเบราว์เซอร์ (ตราดอก 6 กลีบ)
     └── src/
-        ├── main.tsx          จุดเริ่มแอป: โหลดฟอนต์/สไตล์/i18n แล้ว render ภายใต้ QueryClientProvider
-        ├── App.tsx           หน้าเริ่มต้นชั่วคราว (จะถูกแทนด้วยหน้า login/dashboard)
-        ├── App.test.tsx      test ของ App (ภาษา ไทย/อังกฤษ + สถานะเชื่อมต่อ backend)
+        ├── main.tsx          จุดเริ่มแอป: โหลดฟอนต์/สไตล์/i18n แล้ว render ภายใต้ QueryClientProvider > AuthProvider > Router
+        ├── router.tsx        เส้นทางทั้งหมด: /login, / (ไปหน้าแรกตามบทบาท), /admin /teacher /student (จำกัดตามบทบาท)
         ├── index.css         Tailwind + โทเคนสี/ฟอนต์ของแบรนด์ (@theme)
-        ├── components/       component ที่ใช้ซ้ำ: LogoMark (ตราดอก), LanguageToggle (สลับ TH/EN)
+        ├── pages/            หน้าจอ: LoginPage (หน้า login แบบเรียบ), RoleHomePage (หน้าแรกชั่วคราวของแต่ละบทบาท)
+        ├── components/       component ที่ใช้ซ้ำ: LogoMark (ตราดอก), LanguageToggle (สลับ TH/EN), PageMessage (ข้อความเต็มหน้า เช่น กำลังโหลด)
         ├── i18n/             ระบบหลายภาษา: index.ts (ตั้งค่า, ค่าเริ่มต้น = ไทย) + locales/th.json, en.json
-        ├── lib/api.ts        ฟังก์ชันเรียก backend (ตอนนี้มีแค่ health check — จะถูกแทนที่ด้วย apiClient)
-        ├── lib/apiError.ts   ApiError: error จาก backend ที่มี `code` ไว้แปลข้อความ
-        ├── lib/httpCore.ts   ยิงคำขอ 1 ครั้ง (แนบ token, แปลง error) ไม่มีการลองซ้ำ
-        ├── lib/apiClient.ts  เรียก API ที่ต้อง login: 401 → ขอ token ใหม่แล้วลองซ้ำครั้งเดียว
-        ├── auth/session.ts   เซสชัน: เก็บ access token ในหน่วยความจำ, login/logout/refresh (ขอทีละคำขอ), สัญญาณเมื่อเซสชันเปลี่ยน
+        ├── lib/              ชั้นเรียก API
+        │   ├── apiError.ts     ApiError: error จาก backend ที่มี `code` ไว้แปลข้อความ
+        │   ├── httpCore.ts     ยิงคำขอ 1 ครั้ง (แนบ token, แปลง error) ไม่มีการลองซ้ำ
+        │   └── apiClient.ts    เรียก API ที่ต้อง login: 401 → ขอ token ใหม่แล้วลองซ้ำครั้งเดียว
+        ├── auth/             ระบบล็อกอินฝั่งเว็บ
+        │   ├── session.ts      เก็บ access token ในหน่วยความจำ, login/logout/refresh (ขอทีละคำขอ), สัญญาณเมื่อเซสชันเปลี่ยน
+        │   ├── AuthProvider.tsx  เก็บสถานะล็อกอินของทั้งแอป (loading / authenticated / unauthenticated) และกู้เซสชันตอนเปิดเว็บ
+        │   ├── authContext.ts  ตัว context + ชนิดข้อมูล    useAuth.ts  hook อ่านสถานะ/สั่ง login-logout
+        │   ├── guards.tsx      ตัวกันหน้า: RequireAuth, RequireRole, PublicOnly, RedirectToHome
+        │   └── roles.ts        หน้าแรก (path) ของแต่ละบทบาท
         ├── types/auth.ts     ชนิดข้อมูล User / Role / Session ตรงกับ backend
-        └── test/             ตัวช่วยสำหรับ test: setup.ts (ตั้งค่าก่อนทุก test), fetchMock.ts (จำลอง backend)
+        └── test/             ตัวช่วยสำหรับ test: setup.ts (ตั้งค่าก่อนทุก test), fetchMock.ts (จำลอง backend), renderApp.tsx (render แอปจริงด้วย router)
                               (ไฟล์ *.test.ts(x) อยู่ข้างไฟล์ที่ทดสอบ)
 ```
 
 ## ที่ยังไม่มี (จะเพิ่มตามลำดับ)
 - แอป backend อื่นตาม `docs/database.md` §2 (academics, enrollment ฯลฯ) — เพิ่มพร้อมฟีเจอร์ที่ใช้
-- หน้าจอจริงตาม wireframe (login, dashboard ฯลฯ) และ React Router
+- หน้าจอจริงตาม wireframe (login และ dashboard แบบเต็ม ฯลฯ) — ตอนนี้ login เป็นแบบเรียบ และหน้าแรกของแต่ละบทบาทเป็นหน้าชั่วคราว

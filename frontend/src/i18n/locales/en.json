@@ -3,12 +3,39 @@
     "name": "Mangosteen Campus",
     "tagline": "The online learning system for your courses"
   },
-  "status": {
-    "checking": "Checking the connection to the system",
-    "ok": "Connected to the backend",
-    "error": "Can't reach the backend yet"
+  "common": {
+    "loading": "Loading"
   },
   "language": {
     "label": "Language"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Use your student/staff ID or your email",
+    "identifier": "ID or email",
+    "identifierPlaceholder": "Student/staff ID or email",
+    "password": "Password",
+    "passwordPlaceholder": "Your password",
+    "submit": "Sign in",
+    "submitting": "Signing in"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "teacher": "Teacher",
+    "student": "Student"
+  },
+  "home": {
+    "greeting": "Hello, {{name}}",
+    "placeholder": "This is a temporary page. The dashboard from the design comes in the next step."
+  },
+  "nav": {
+    "logout": "Sign out"
+  },
+  "errors": {
+    "invalid_credentials": "The sign-in details are incorrect. Check your ID or email and your password, then try again.",
+    "email_not_verified": "This account's email isn't verified yet. Open the link in the email we sent to get started.",
+    "validation_error": "Enter both your ID or email and your password.",
+    "network_error": "Can't reach the system. Try again.",
+    "unknown_error": "Something unexpected went wrong. Try again."
   }
 }
