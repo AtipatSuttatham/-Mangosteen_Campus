@@ -1,0 +1,20 @@
+{% autoescape off %}สวัสดี {{ first_name }},
+
+ขอบคุณที่สมัคร Mangosteen Campus กรุณายืนยันอีเมลของคุณโดยเปิดลิงก์นี้:
+
+{{ link }}
+
+ลิงก์ใช้ได้ครั้งเดียวและหมดอายุใน {{ hours }} ชั่วโมง
+ถ้าคุณไม่ได้สมัคร ไม่ต้องทำอะไร เพิกเฉยอีเมลนี้ได้เลย
+
+------------------------------------------------------------
+
+Hello {{ first_name }},
+
+Thanks for signing up for Mangosteen Campus. Please verify your email by opening this link:
+
+{{ link }}
+
+The link works once and expires in {{ hours }} hour{{ hours|pluralize }}.
+If you didn't sign up, you can ignore this email.
+{% endautoescape %}

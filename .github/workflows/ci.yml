@@ -36,6 +36,8 @@ jobs:
     env:
       # settings.py ไม่ยอมเริ่มถ้าไม่มี secret และไม่ได้เปิด debug — ใช้ค่าสำหรับ CI เท่านั้น
       DJANGO_SECRET_KEY: ci-only-not-a-real-secret
+      # settings.py ไม่ยอมเริ่มถ้าไม่ได้เปิด debug และไม่ตั้งที่อยู่เว็บสำหรับทำลิงก์ในอีเมล — ค่าสมมติสำหรับ CI
+      FRONTEND_URL: http://localhost:5180
       # ค่าเชื่อมต่อฐานข้อมูลของ CI (ตรงกับ service ด้านบน; ใช้เฉพาะใน CI ไม่ใช่ความลับจริง)
       POSTGRES_DB: mangosteen
       POSTGRES_USER: mangosteen

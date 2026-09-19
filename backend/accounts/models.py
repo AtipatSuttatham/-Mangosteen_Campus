@@ -116,3 +116,49 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         # ทุกทางที่บันทึกผ่าน ORM ได้ข้อมูลรูปแบบเดียวกันเสมอ
         self.normalize_fields()
         super().save(*args, **kwargs)
+
+
+class TokenPurpose(models.TextChoices):
+    """จุดประสงค์ของโทเคนในลิงก์อีเมล — โทเคนของจุดประสงค์หนึ่งเอาไปใช้กับอีกจุดประสงค์ไม่ได้"""
+
+    VERIFY_EMAIL = "verify_email", "ยืนยันอีเมล"
+    # ใช้ทั้ง "ลืมรหัสผ่าน" และลิงก์ตั้งรหัสครั้งแรกของบัญชีที่ Admin สร้างให้ (ต่างกันที่ expires_at)
+    RESET_PASSWORD = "reset_password", "ตั้งรหัสผ่าน"
+
+
+class EmailVerificationToken(models.Model):
+    """โทเคนแบบใช้ครั้งเดียวในลิงก์อีเมล (docs/database.md §3)
+
+    เก็บเฉพาะแฮช SHA-256 ของโทเคน — ตัวโทเคนจริงมีแค่ในลิงก์ที่ส่งทางอีเมล
+    ฐานข้อมูลรั่วออกไปก็เอาแฮชไปทำลิงก์ใช้ไม่ได้ (ตรงกับหลักเดียวกับ refresh token ที่ไม่เก็บใบที่ยังใช้ได้)
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name="ผู้ใช้",
+        on_delete=models.CASCADE,
+        related_name="email_tokens",
+    )
+    # SHA-256 แบบ hex ยาว 64 ตัวอักษร — ห้ามซ้ำ (ใช้หาโทเคนตอนกดลิงก์)
+    token_hash = models.CharField("แฮชของโทเคน", max_length=64, unique=True)
+    purpose = models.CharField("จุดประสงค์", max_length=20, choices=TokenPurpose.choices)
+    # บังคับมีเสมอ: ไม่มีโทเคนที่ไม่หมดอายุ (ผู้ออกโทเคนกำหนดอายุตามกรณี)
+    expires_at = models.DateTimeField("หมดอายุเมื่อ")
+    # ใช้แล้วเมื่อไร (ว่าง = ยังไม่ใช้) — ใช้แล้วใช้ซ้ำไม่ได้
+    used_at = models.DateTimeField("ใช้เมื่อ", null=True, blank=True)
+    # เวลาที่ออกโทเคน — ใช้บังคับกฎ "ขอลิงก์ใหม่ได้ทุก 60 วินาที" (เพิ่มจากสเปกเดิม ดู docs/database.md)
+    created_at = models.DateTimeField("ออกเมื่อ", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "โทเคนในลิงก์อีเมล"
+        verbose_name_plural = "โทเคนในลิงก์อีเมล"
+        constraints = [
+            # ตาข่ายกันพลาดระดับฐานข้อมูล: purpose ต้องเป็นค่าที่กำหนดไว้เท่านั้น
+            models.CheckConstraint(
+                condition=Q(purpose__in=TokenPurpose.values),
+                name="accounts_emailtoken_purpose_valid",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.purpose} ของ {self.user_id}"

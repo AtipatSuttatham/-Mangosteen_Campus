@@ -40,9 +40,11 @@ Mangosteen_Campus/
 │   │   ├── views.py            health check (`GET /api/health/`)
 │   │   ├── test_health.py      test ของ health check
 │   │   ├── exceptions.py       ตัวจัดการ error ของ API ทั้งระบบ — ทุก error มี `code` ให้ frontend ใช้แปลภาษา
-│   │   └── test_exceptions.py  test ของตัวจัดการ error
+│   │   ├── test_exceptions.py  test ของตัวจัดการ error
+│   │   ├── dev_email_backend.py  ตัวส่งอีเมลตอน dev: พิมพ์ลงคอนโซลโดยไม่ crash เมื่อคอนโซล Windows พิมพ์ภาษาไทยไม่ได้
+│   │   └── test_dev_email_backend.py  test ของตัวส่งอีเมลตอน dev
 │   └── accounts/             บัญชีผู้ใช้ (ต่อไปคือล็อกอิน/สมัคร/ยืนยันอีเมล)
-│       ├── models.py           User แบบกำหนดเอง (อีเมลเป็นตัวล็อกอิน + รหัสนักศึกษา/พนักงาน + role) พร้อม constraint
+│       ├── models.py           User แบบกำหนดเอง (อีเมลเป็นตัวล็อกอิน + รหัสนักศึกษา/พนักงาน + role) และ EmailVerificationToken
 │       ├── roles.py            บทบาทระดับระบบ: admin / teacher / student
 │       ├── validators.py       ตรวจรหัสนักศึกษา/พนักงาน (ห้ามมี @)
 │       ├── managers.py         create_user / create_superuser
@@ -50,17 +52,22 @@ Mangosteen_Campus/
 │       ├── admin.py            หน้าจัดการผู้ใช้ใน Django admin (ใช้ชั่วคราวก่อนมีหน้าจัดการจริง)
 │       ├── services.py         หาผู้ใช้จากช่อง login ช่องเดียว (@ = อีเมล) และตรวจรหัสผ่าน
 │       ├── tokens.py           ออก/ตรวจ refresh token (ใส่ role) และตั้ง/ลบ cookie
+│       ├── email_tokens.py     ออก/ใช้โทเคนครั้งเดียวในลิงก์อีเมล (เก็บเฉพาะแฮช), กฎขอลิงก์ใหม่ทุก 60 วินาที
+│       ├── emails.py           ส่งอีเมลลิงก์ยืนยันอีเมล / ตั้งรหัสผ่านใหม่ (ไทย+อังกฤษในฉบับเดียว)
+│       ├── templates/accounts/email/  ข้อความอีเมล: verify_email.txt, reset_password.txt
 │       ├── serializers.py      รูปแบบข้อมูลเข้า-ออกของ login และข้อมูลผู้ใช้
 │       ├── exceptions.py       error ของระบบล็อกอิน (แต่ละตัวมี `code`)
 │       ├── views.py            endpoint: login / refresh / logout / me
 │       ├── urls.py             เส้นทางใต้ /api/auth/
 │       ├── management/commands/
 │       │   └── seed_demo.py    คำสั่งสร้าง/รีเซ็ตบัญชีทดสอบ 3 บทบาท (เฉพาะ DEBUG=1, รหัสผ่านจาก DEMO_PASSWORD ใน .env)
-│       ├── migrations/         migration ของแอปนี้ (0001 = ตารางผู้ใช้ ซึ่งเป็น migration แรกของโปรเจกต์)
+│       ├── migrations/         migration ของแอปนี้ (0001 = ตารางผู้ใช้, 0002 = ตารางโทเคนในลิงก์อีเมล)
 │       ├── test_models.py      test กฎของ User (normalize อีเมล/รหัส, unique, constraint ของฐานข้อมูล)
 │       ├── test_admin.py       test หน้า admin และคำสั่ง createsuperuser
 │       ├── test_auth_api.py    test API ล็อกอินทั้งชุด (ปกติ + กรณีโจมตี)
-│       └── test_seed_demo.py   test คำสั่ง seed_demo (รั้วกัน DEBUG, รหัสผ่าน, รันซ้ำ, ล็อกอินได้จริง)
+│       ├── test_seed_demo.py   test คำสั่ง seed_demo (รั้วกัน DEBUG, รหัสผ่าน, รันซ้ำ, ล็อกอินได้จริง)
+│       ├── test_email_tokens.py  test โทเคนในลิงก์อีเมล (ครั้งเดียว, หมดอายุ, ผิดจุดประสงค์, กฎ 60 วินาที)
+│       └── test_emails.py      test อีเมลยืนยัน/ตั้งรหัสผ่าน (ลิงก์ถูก, ครบสองภาษา)
 │
 └── frontend/               React 19 + Vite + TypeScript + Tailwind v4 (จัดการแพ็กเกจด้วย pnpm)
     ├── package.json          dependency + สคริปต์ (dev / build / typecheck / lint / test)

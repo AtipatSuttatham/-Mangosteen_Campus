@@ -114,6 +114,29 @@ TIME_ZONE = "Asia/Bangkok"
 USE_I18N = True
 USE_TZ = True
 
+# อีเมล: ตอน dev พิมพ์ลงคอนโซลแทนการส่งจริง (ตัวที่เขียนเองไม่ crash เมื่อคอนโซลพิมพ์ภาษาไทยไม่ได้)
+# ตอนขึ้นเว็บจริงยังไม่ได้เลือก provider — ตั้ง DJANGO_EMAIL_BACKEND และค่า EMAIL_* เองผ่าน environment
+# (โค้ดส่งอีเมลใช้ send_mail ของ Django จึงไม่ผูกกับ provider ใด)
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND",
+    "common.dev_email_backend.ConsoleEmailBackend"
+    if DEBUG
+    else "django.core.mail.backends.smtp.EmailBackend",
+)
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DJANGO_DEFAULT_FROM_EMAIL", "Mangosteen Campus <noreply@mangosteen.test>"
+)
+
+# ที่อยู่ของเว็บ (frontend) ที่ใช้ทำลิงก์ในอีเมล เช่น {FRONTEND_URL}/verify-email?token=...
+# ตอน dev ใช้ค่าสำรองได้ ส่วนขึ้นเว็บจริงต้องตั้งเอง — ไม่ตั้ง = แอปไม่ยอมเริ่ม
+# (กันส่งลิงก์ localhost ให้ผู้ใช้จริงโดยไม่ตั้งใจ)
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "").strip().rstrip("/")
+if not FRONTEND_URL:
+    if DEBUG:
+        FRONTEND_URL = "http://localhost:5180"
+    else:
+        raise RuntimeError("ต้องตั้งค่า FRONTEND_URL (ที่อยู่เว็บที่ใช้ทำลิงก์ในอีเมล)")
+
 # ที่อยู่ URL ของไฟล์ static (ใช้กับหน้า Django admin)
 STATIC_URL = "static/"
 

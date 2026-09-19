@@ -40,3 +40,19 @@ class MissingRequestedWithHeader(APIException):
     status_code = status.HTTP_403_FORBIDDEN
     default_detail = "คำขอไม่ถูกต้อง"
     default_code = "missing_requested_with_header"
+
+
+class TokenInvalid(APIException):
+    """โทเคนในลิงก์อีเมลใช้ไม่ได้: ไม่มีในระบบ / ใช้ไปแล้ว / ผิดจุดประสงค์"""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "ลิงก์ไม่ถูกต้องหรือถูกใช้ไปแล้ว"
+    default_code = "token_invalid"
+
+
+class TokenExpired(APIException):
+    """โทเคนในลิงก์อีเมลถูกต้อง แต่หมดอายุแล้ว — หน้าเว็บควรเสนอให้ขอลิงก์ใหม่"""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "ลิงก์หมดอายุแล้ว"
+    default_code = "token_expired"
