@@ -12,7 +12,7 @@
 
 ## 0. สถาปัตยกรรมโดยรวม (ต้องเข้าใจก่อน)
 
-- **Backend**: Django 5.2 + DRF, PostgreSQL. **Frontend**: React + Vite + TS (SPA แยก origin). Auth = JWT.
+- **Backend**: Django 5.2 + DRF, PostgreSQL. **Frontend**: React + Vite + TS (SPA เรียก `/api` ผ่าน proxy จึงเป็น origin เดียวกับหน้าเว็บ). Auth = JWT (ดู `docs/api-auth.md`).
 - **ทิศทางข้อมูล**: frontend เรียก REST API → DRF serializer/viewset → service layer → model. **ไม่มี** business logic ใน frontend.
 - **3 กลไกอัตโนมัติที่ต้องรู้**:
   1. **`Auditable` signal** — ทุก model ที่ inherit `Auditable` เขียน `AuditLog` อัตโนมัติทุกครั้งที่ save/delete

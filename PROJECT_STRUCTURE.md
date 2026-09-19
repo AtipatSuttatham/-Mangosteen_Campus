@@ -18,11 +18,12 @@ Mangosteen_Campus/
 │       └── ci.yml            CI (GitHub Actions): backend = ruff + pytest / frontend = tsc + eslint + vitest
 │
 ├── docs/                   เอกสารออกแบบ
-│   ├── database.md           สเปกฐานข้อมูลเต็ม (field / constraint / ความสัมพันธ์) v1.3 freeze
+│   ├── database.md           สเปกฐานข้อมูลเต็ม (field / constraint / ความสัมพันธ์) v1.4 freeze
 │   ├── database-guide.md     ใครเขียน/ใครอ่านแต่ละตาราง, state machine, workflow ครบวงจร
 │   ├── database-erd.md       ERD แบบ Mermaid แยกตามโดเมน
 │   ├── database-fields.md    สรุป field ทุกตารางแบบ quick reference
 │   ├── api-auth.md           สัญญา API ล็อกอิน (endpoint, cookie, รูปแบบ error) สำหรับฝั่งเว็บ
+│   ├── pre-deploy-checklist.md  เช็กลิสต์สิ่งที่ต้องทำก่อนขึ้นเว็บจริง (ความปลอดภัย, งานเบื้องหลัง, อีเมล)
 │   └── design.md             แนวทางดีไซน์ UI (สี ฟอนต์ โครงหน้า) + สถานะ wireframe
 │
 ├── backend/                Django 5.2 + DRF (จัดการแพ็กเกจด้วย uv)

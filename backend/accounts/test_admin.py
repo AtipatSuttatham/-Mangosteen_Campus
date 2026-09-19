@@ -20,6 +20,38 @@ def test_add_page_loads(admin_client):
     assert response.status_code == 200
 
 
+def test_change_and_password_pages_load_for_existing_user(admin_client):
+    """หน้าแก้ไขผู้ใช้และหน้าเปลี่ยนรหัสผ่านของผู้ใช้ (ใช้ User แบบกำหนดเอง) ต้องเปิดได้"""
+    user = User.objects.create_user(
+        email="someone@example.com", password="Str0ng-pass-123", first_name="ก", last_name="ข"
+    )
+
+    change = admin_client.get(f"/admin/accounts/user/{user.pk}/change/")
+    password = admin_client.get(f"/admin/accounts/user/{user.pk}/password/")
+
+    assert change.status_code == 200
+    assert password.status_code == 200
+
+
+def test_changelist_search_and_filter_work(admin_client):
+    User.objects.create_user(
+        email="a@example.com",
+        password=None,
+        first_name="ก",
+        last_name="ข",
+        student_or_staff_id="T0042",
+    )
+
+    by_id = admin_client.get("/admin/accounts/user/?q=T0042")
+    by_role = admin_client.get(
+        "/admin/accounts/user/?role__exact=student&is_email_verified__exact=0"
+    )
+
+    assert by_id.status_code == 200
+    assert "a@example.com" in by_id.content.decode()
+    assert by_role.status_code == 200
+
+
 def test_admin_can_create_user_without_password(admin_client):
     """Admin สร้างบัญชีโดยไม่ตั้งรหัสผ่าน (เจ้าของบัญชีตั้งเองภายหลังผ่านลิงก์)"""
     response = admin_client.post(
