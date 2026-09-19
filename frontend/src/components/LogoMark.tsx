@@ -30,13 +30,20 @@ export function LogoMark({ size = 26, className }: LogoMarkProps) {
 }
 
 // ตราดอกแบบเส้น (ไม่มีสีเติม) ใช้เป็นลายใหญ่ประดับพื้นหลัง — ขนาดและตำแหน่งกำหนดผ่าน className
-export function CalyxOutline({ className }: { className?: string }) {
+// strokeWidth ยิ่งมากเส้นยิ่งหนา (หน้า login ใช้เส้นบาง 0.35, ลายจางมุมหน้า dashboard ใช้ 0.9)
+export function CalyxOutline({
+  className,
+  strokeWidth = 0.35,
+}: {
+  className?: string
+  strokeWidth?: number
+}) {
   return (
     <svg
       viewBox="0 0 48 48"
       fill="none"
       stroke="currentColor"
-      strokeWidth="0.35"
+      strokeWidth={strokeWidth}
       aria-hidden="true"
       className={className}
     >

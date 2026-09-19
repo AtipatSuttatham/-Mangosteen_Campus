@@ -33,12 +33,56 @@
     "teacher": "ผู้สอน",
     "student": "ผู้เรียน"
   },
-  "home": {
-    "greeting": "สวัสดี, {{name}}",
-    "placeholder": "หน้านี้เป็นหน้าชั่วคราว dashboard ตามแบบจะมาในก้อนถัดไป"
-  },
   "nav": {
+    "main": "เมนูหลัก",
+    "dashboard": "แดชบอร์ด",
+    "users": "จัดการผู้ใช้",
+    "terms": "ภาคเรียน",
+    "support": "สนับสนุนระบบ",
+    "impersonate": "สลับมุมมอง",
+    "audit": "Audit Log",
+    "myCourses": "รายวิชาของฉัน",
+    "announcements": "ประกาศ",
+    "notifications": "การแจ้งเตือน",
+    "profile": "เมนูโปรไฟล์",
+    "openMenu": "เปิดเมนู",
+    "closeMenu": "ปิดเมนู",
     "logout": "ออกจากระบบ"
+  },
+  "dashboard": {
+    "greeting": "สวัสดี, {{name}}",
+    "empty": "ยังไม่มีข้อมูล",
+    "noData": "ยังไม่มีข้อมูล",
+    "admin": {
+      "subtitle": "ภาพรวมของระบบวันนี้",
+      "figures": {
+        "teachers": "ผู้สอนในระบบ",
+        "students": "ผู้เรียนในระบบ",
+        "courses": "รายวิชาที่เปิดสอนอยู่"
+      },
+      "primary": "กิจกรรมล่าสุด",
+      "secondary": "ทางลัด"
+    },
+    "teacher": {
+      "subtitle": "รายวิชาและงานสอนของคุณ",
+      "figures": {
+        "courses": "รายวิชาที่กำลังสอน",
+        "students": "ผู้เรียนทั้งหมด",
+        "toGrade": "ชิ้นงานรอตรวจ"
+      },
+      "primary": "งานที่รอตรวจ",
+      "secondary": "รายวิชาของฉัน"
+    },
+    "student": {
+      "subtitle": "ภาพรวมการเรียนของคุณ",
+      "figures": {
+        "courses": "รายวิชาที่ลงทะเบียน",
+        "dueThisWeek": "งานที่ต้องส่งสัปดาห์นี้",
+        "unreadAnnouncements": "ประกาศที่ยังไม่ได้อ่าน"
+      },
+      "primary": "งานที่ต้องทำเร็วๆ นี้",
+      "secondary": "ประกาศล่าสุด"
+    }
   },
   "errors": {
     "invalid_credentials": {

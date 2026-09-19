@@ -33,12 +33,56 @@
     "teacher": "Teacher",
     "student": "Student"
   },
-  "home": {
-    "greeting": "Hello, {{name}}",
-    "placeholder": "This is a temporary page. The dashboard from the design comes in the next step."
-  },
   "nav": {
+    "main": "Main menu",
+    "dashboard": "Dashboard",
+    "users": "Manage users",
+    "terms": "Terms",
+    "support": "System support",
+    "impersonate": "Switch view",
+    "audit": "Audit log",
+    "myCourses": "My courses",
+    "announcements": "Announcements",
+    "notifications": "Notifications",
+    "profile": "Profile menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
     "logout": "Sign out"
+  },
+  "dashboard": {
+    "greeting": "Hello, {{name}}",
+    "empty": "Nothing to show yet",
+    "noData": "No data yet",
+    "admin": {
+      "subtitle": "System overview for today",
+      "figures": {
+        "teachers": "Teachers in the system",
+        "students": "Students in the system",
+        "courses": "Open courses"
+      },
+      "primary": "Recent activity",
+      "secondary": "Shortcuts"
+    },
+    "teacher": {
+      "subtitle": "Your courses and teaching",
+      "figures": {
+        "courses": "Courses you teach",
+        "students": "Total students",
+        "toGrade": "Submissions to grade"
+      },
+      "primary": "Waiting to be graded",
+      "secondary": "My courses"
+    },
+    "student": {
+      "subtitle": "Your learning at a glance",
+      "figures": {
+        "courses": "Enrolled courses",
+        "dueThisWeek": "Due this week",
+        "unreadAnnouncements": "Unread announcements"
+      },
+      "primary": "Coming up",
+      "secondary": "Latest announcements"
+    }
   },
   "errors": {
     "invalid_credentials": {

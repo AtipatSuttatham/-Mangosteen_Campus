@@ -70,12 +70,19 @@ Mangosteen_Campus/
     │   └── favicon.svg       ไอคอนแท็บเบราว์เซอร์ (ตราดอก 6 กลีบ)
     └── src/
         ├── main.tsx          จุดเริ่มแอป: โหลดฟอนต์/สไตล์/i18n แล้ว render ภายใต้ QueryClientProvider > AuthProvider > Router
-        ├── router.tsx        เส้นทางทั้งหมด: /login, / (ไปหน้าแรกตามบทบาท), /admin /teacher /student (จำกัดตามบทบาท)
+        ├── router.tsx        เส้นทางทั้งหมด: /login, / (ไปหน้าแรกตามบทบาท), /admin /teacher /student (จำกัดตามบทบาท, อยู่ใต้เปลือกหน้า AppShell)
         ├── index.css         Tailwind + โทเคนสี/ฟอนต์ของแบรนด์ (@theme)
-        ├── pages/            หน้าจอ: LoginPage (หน้า login แบบเรียบ), RoleHomePage (หน้าแรกชั่วคราวของแต่ละบทบาท)
-        ├── components/       component ที่ใช้ซ้ำ: LogoMark (ตราดอก), LanguageToggle (สลับ TH/EN), PageMessage (ข้อความเต็มหน้า เช่น กำลังโหลด)
+        ├── pages/            หน้าจอ
+        │   ├── LoginPage.tsx      หน้า login ตาม wireframe (จอกว้างมีแถบม่วงซ้าย, มือถือมีแถบบน)
+        │   ├── DashboardPage.tsx  dashboard ของทั้ง 3 บทบาท (โครงเปล่า: ตัวเลขเป็น "–" จนกว่าจะมี API)
+        │   └── dashboardConfig.ts หัวข้อ/ตัวเลขสำคัญ/ช่องข้อมูลของ dashboard แต่ละบทบาท
+        ├── layout/           เปลือกหน้าหลังล็อกอิน: AppShell (รวมทุกส่วน), Sidebar (จอกว้าง), MobileChrome (แถบบน + แถบล่างของมือถือ),
+        │                     NavList + navConfig (เมนูตามบทบาท; เมนูที่ยังไม่มีหน้ากดไม่ได้), Sheet (ลิ้นชัก/แผ่นล่างด้วย <dialog>),
+        │                     UserBadge, LogoutButton, BellButton (กระดิ่ง ยังกดไม่ได้)
+        ├── components/       component ที่ใช้ซ้ำ: LogoMark (ตราดอก), Icon (ไอคอนเมนู), LanguageToggle (สลับ TH/EN), PageMessage (ข้อความเต็มหน้า เช่น กำลังโหลด)
         ├── i18n/             ระบบหลายภาษา: index.ts (ตั้งค่า) + language.ts (จำภาษาที่ผู้ใช้เลือกไว้ในเบราว์เซอร์, ค่าเริ่มต้น = ไทย) + locales/th.json, en.json
-        ├── lib/              ชั้นเรียก API
+        ├── lib/              ชั้นเรียก API + ตัวช่วยเล็ก ๆ
+        │   ├── cx.ts           รวมชื่อ class เข้าด้วยกัน
         │   ├── apiError.ts     ApiError: error จาก backend ที่มี `code` ไว้แปลข้อความ
         │   ├── httpCore.ts     ยิงคำขอ 1 ครั้ง (แนบ token, แปลง error) ไม่มีการลองซ้ำ
         │   └── apiClient.ts    เรียก API ที่ต้อง login: 401 → ขอ token ใหม่แล้วลองซ้ำครั้งเดียว
@@ -86,7 +93,7 @@ Mangosteen_Campus/
         │   ├── guards.tsx      ตัวกันหน้า: RequireAuth, RequireRole, PublicOnly, RedirectToHome
         │   └── roles.ts        หน้าแรก (path) ของแต่ละบทบาท
         ├── types/auth.ts     ชนิดข้อมูล User / Role / Session ตรงกับ backend
-        └── test/             ตัวช่วยสำหรับ test: setup.ts (ตั้งค่าก่อนทุก test), fetchMock.ts (จำลอง backend), renderApp.tsx (render แอปจริงด้วย router)
+        └── test/             ตัวช่วยสำหรับ test: setup.ts (ตั้งค่าก่อนทุก test), fetchMock.ts (จำลอง backend), renderApp.tsx (render แอปจริงด้วย router), renderWithAuth.tsx (render เส้นทางจริงด้วยสถานะล็อกอินที่กำหนดเอง)
                               (ไฟล์ *.test.ts(x) อยู่ข้างไฟล์ที่ทดสอบ)
 ```
 
