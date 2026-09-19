@@ -141,6 +141,61 @@ describe('หน้า login (ทั้งสายกับ AuthProvider แล
     expect(await screen.findByRole('heading', { name: 'เข้าสู่ระบบ' })).toBeInTheDocument()
   })
 
+  it('ปุ่มแสดง/ซ่อนรหัสผ่านสลับชนิดช่องกรอกและบอกสถานะให้โปรแกรมอ่านหน้าจอ', async () => {
+    mockFetch({ [REFRESH]: noSession })
+    renderApp('/login')
+    await screen.findByRole('heading', { name: 'เข้าสู่ระบบ' })
+    const field = screen.getByLabelText('รหัสผ่าน')
+    expect(field).toHaveAttribute('type', 'password')
+
+    fireEvent.click(screen.getByRole('button', { name: 'แสดงรหัสผ่าน' }))
+
+    expect(field).toHaveAttribute('type', 'text')
+    expect(screen.getByRole('button', { name: 'ซ่อนรหัสผ่าน' })).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'ซ่อนรหัสผ่าน' }))
+    expect(field).toHaveAttribute('type', 'password')
+  })
+
+  it('ลิงก์ลืมรหัสผ่านอยู่ใต้ช่องรหัสผ่าน และลิงก์ที่ยังไม่มีหน้าปลายทางถูกปิดไว้', async () => {
+    mockFetch({ [REFRESH]: noSession })
+    renderApp('/login')
+    const passwordField = await screen.findByLabelText('รหัสผ่าน')
+
+    const forgot = screen.getByRole('button', { name: 'ลืมรหัสผ่าน' })
+    const register = screen.getByRole('button', { name: 'สมัครสมาชิกด้วยอีเมล' })
+
+    expect(forgot).toBeDisabled()
+    expect(register).toBeDisabled()
+    // ลืมรหัสผ่านต้องตามหลังช่องรหัสผ่านใน DOM (อยู่ใต้ช่อง ตามที่ผู้ใช้กำหนด)
+    expect(passwordField.compareDocumentPosition(forgot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('ยังไม่ยืนยันอีเมลใช้กล่องเตือนสีเหลือง ส่วน error อื่นใช้กล่องสีแดง', async () => {
+    mockFetch({
+      [REFRESH]: noSession,
+      [LOGIN]: () => errorResponse(403, 'email_not_verified'),
+    })
+    renderApp('/login')
+    await fillAndSubmit('a@example.com', 'secret')
+    expect(await screen.findByRole('alert')).toHaveClass('bg-warn-50')
+
+    mockFetch({ [REFRESH]: noSession, [LOGIN]: () => errorResponse(401, 'invalid_credentials') })
+    fireEvent.click(screen.getByRole('button', { name: 'เข้าสู่ระบบ' }))
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveClass('bg-error-50'))
+  })
+
+  it('จำภาษาที่เลือกไว้ในเบราว์เซอร์สำหรับครั้งหน้า', async () => {
+    mockFetch({ [REFRESH]: noSession })
+    renderApp('/login')
+    await screen.findByRole('heading', { name: 'เข้าสู่ระบบ' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'EN' }))
+
+    await screen.findByRole('heading', { name: 'Sign in' })
+    expect(localStorage.getItem('mangosteen.language')).toBe('en')
+  })
+
   it('สลับเป็นภาษาอังกฤษได้ และข้อความ error เปลี่ยนตามภาษา', async () => {
     mockFetch({ [REFRESH]: noSession, [LOGIN]: () => errorResponse(401, 'invalid_credentials') })
     renderApp('/login')

@@ -4,7 +4,8 @@
     "tagline": "The online learning system for your courses"
   },
   "common": {
-    "loading": "Loading"
+    "loading": "Loading",
+    "comingSoon": "Not available yet"
   },
   "language": {
     "label": "Language"
@@ -12,12 +13,20 @@
   "login": {
     "title": "Sign in",
     "subtitle": "Use your student/staff ID or your email",
+    "taglineSub": "View lessons, take quizzes, submit work and follow your scores in one place",
     "identifier": "ID or email",
     "identifierPlaceholder": "Student/staff ID or email",
     "password": "Password",
     "passwordPlaceholder": "Your password",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "showPasswordLabel": "Show password",
+    "hidePasswordLabel": "Hide password",
+    "forgot": "Forgot password",
     "submit": "Sign in",
-    "submitting": "Signing in"
+    "submitting": "Signing in",
+    "noAccount": "Don't have an account?",
+    "register": "Sign up with email"
   },
   "roles": {
     "admin": "Administrator",
@@ -32,10 +41,25 @@
     "logout": "Sign out"
   },
   "errors": {
-    "invalid_credentials": "The sign-in details are incorrect. Check your ID or email and your password, then try again.",
-    "email_not_verified": "This account's email isn't verified yet. Open the link in the email we sent to get started.",
-    "validation_error": "Enter both your ID or email and your password.",
-    "network_error": "Can't reach the system. Try again.",
-    "unknown_error": "Something unexpected went wrong. Try again."
+    "invalid_credentials": {
+      "title": "The sign-in details are incorrect",
+      "description": "Check your ID or email and your password, then try again."
+    },
+    "email_not_verified": {
+      "title": "This account's email isn't verified yet",
+      "description": "Open the link in the email we sent to get started."
+    },
+    "validation_error": {
+      "title": "Some details are missing",
+      "description": "Enter both your ID or email and your password."
+    },
+    "network_error": {
+      "title": "Can't reach the system",
+      "description": "Check your internet connection and try again."
+    },
+    "unknown_error": {
+      "title": "Something unexpected went wrong",
+      "description": "Try again."
+    }
   }
 }

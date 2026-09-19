@@ -74,7 +74,7 @@ Mangosteen_Campus/
         ├── index.css         Tailwind + โทเคนสี/ฟอนต์ของแบรนด์ (@theme)
         ├── pages/            หน้าจอ: LoginPage (หน้า login แบบเรียบ), RoleHomePage (หน้าแรกชั่วคราวของแต่ละบทบาท)
         ├── components/       component ที่ใช้ซ้ำ: LogoMark (ตราดอก), LanguageToggle (สลับ TH/EN), PageMessage (ข้อความเต็มหน้า เช่น กำลังโหลด)
-        ├── i18n/             ระบบหลายภาษา: index.ts (ตั้งค่า, ค่าเริ่มต้น = ไทย) + locales/th.json, en.json
+        ├── i18n/             ระบบหลายภาษา: index.ts (ตั้งค่า) + language.ts (จำภาษาที่ผู้ใช้เลือกไว้ในเบราว์เซอร์, ค่าเริ่มต้น = ไทย) + locales/th.json, en.json
         ├── lib/              ชั้นเรียก API
         │   ├── apiError.ts     ApiError: error จาก backend ที่มี `code` ไว้แปลข้อความ
         │   ├── httpCore.ts     ยิงคำขอ 1 ครั้ง (แนบ token, แปลง error) ไม่มีการลองซ้ำ

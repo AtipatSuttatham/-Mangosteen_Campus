@@ -11,6 +11,15 @@
   --color-ink-2: #6e5b68; /* ข้อความรอง */
   --color-ink-3: #7d6b76; /* ข้อความจาง — เข้มกว่าใน wireframe (#a99aa4) เพื่อให้ contrast ผ่านมาตรฐาน */
   --color-line: #e4dae0; /* เส้นคั่น */
+  --color-field: #cfc2cb; /* ขอบช่องกรอกข้อมูล */
+
+  /* กล่องแจ้ง error (แดง) และกล่องเตือน (เหลือง) — ค่าตาม wireframe หน้า login */
+  --color-error-50: #fbeff0;
+  --color-error-200: #e7c3c8;
+  --color-error-800: #8a2b3a;
+  --color-warn-50: #fbf5e6;
+  --color-warn-200: #e8d6a0;
+  --color-warn-800: #6b5314;
 
   --font-serif: 'Taviraj', serif; /* หัวข้อและตัวเลข */
   --font-sans: 'IBM Plex Sans Thai', system-ui, sans-serif; /* เนื้อความและ UI */

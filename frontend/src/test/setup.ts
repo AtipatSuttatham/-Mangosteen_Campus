@@ -17,4 +17,6 @@ afterEach(() => {
   // เลิกจำลอง fetch และล้าง access token ที่ค้างในหน่วยความจำ
   vi.unstubAllGlobals()
   setAccessToken(null)
+  // ล้างภาษาที่จำไว้ ไม่ให้ค้างข้าม test
+  localStorage.clear()
 })

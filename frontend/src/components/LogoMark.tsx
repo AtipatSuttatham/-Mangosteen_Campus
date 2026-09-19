@@ -28,3 +28,22 @@ export function LogoMark({ size = 26, className }: LogoMarkProps) {
     </svg>
   )
 }
+
+// ตราดอกแบบเส้น (ไม่มีสีเติม) ใช้เป็นลายใหญ่ประดับพื้นหลัง — ขนาดและตำแหน่งกำหนดผ่าน className
+export function CalyxOutline({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.35"
+      aria-hidden="true"
+      className={className}
+    >
+      {ANGLES.map((angle) => (
+        <path key={angle} d={PETAL} transform={`rotate(${angle} 24 24)`} />
+      ))}
+      <circle cx="24" cy="24" r="3.4" />
+    </svg>
+  )
+}
