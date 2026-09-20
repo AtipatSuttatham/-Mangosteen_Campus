@@ -330,6 +330,8 @@ Quiz/Assignment  --publish (is_graded)-->  GradeItem  --(นศ.ทำ+ตรว
   - `content_type` + `object_id` — ชี้ไปแถวใดก็ได้ (Django ContentType framework)
   - `changes` — `{"field": [old, new]}` ; `context` — IP, user-agent, path
 - **ไม่ audit**: session, token, `AuditLog` เอง, `AnnouncementRead`, `Notification`, `CourseGrade`, cache
+- **สถานะตอนนี้ (ก้อน d1)**: มีตาราง + `log_action()` + `field_changes()` + `request_context()` ใน `backend/audit/` แล้ว (ตัวเรียกแรกคือ API จัดการผู้ใช้ก้อน d3) ส่วน `Auditable` signal อัตโนมัติและหน้า Audit Log ยังไม่ทำ — รายละเอียดที่ `docs/database.md` §10
+- **วิธีเรียกใช้**: `log_action(actor=admin, action=AuditAction.UPDATE, target=user, changes=field_changes(before, after, ["role", "email"]), context=request_context(request))` — ระบุฟิลด์ใน `field_changes` เสมอ (whitelist) ห้ามส่ง dict ของทั้งโมเดล และเรียกใน `transaction.atomic()` เดียวกับการแก้ข้อมูล
 
 ---
 

@@ -544,6 +544,12 @@ Course
   - 1 การกระทำ → กระทบหลายแถว: `publish` (สร้าง GradeItem + Notification พร้อมกัน), `enroll` / `unenroll` (batch), `regrade` (recompute หลาย attempt)
 - ไม่ audit: infra / derived model (session, token, `AuditLog`, `AnnouncementRead`, `Notification`, `CourseGrade`, cache)
 
+**สถานะการทำงานจริง (ก้อน d1, 2026-09-20 — ทำแบบเล็กก่อน):**
+- ทำแล้ว: แอป `audit` (โมเดล `AuditLog` ตามตารางข้างบน + constraint ให้ `action` เป็นค่าที่กำหนด), `audit.services.log_action()`, `field_changes()` (เทียบเฉพาะฟิลด์ที่ระบุแบบ whitelist จึงไม่มีทางเก็บรหัสผ่าน/โทเคน), `request_context()` (IP จาก `REMOTE_ADDR` เท่านั้น ไม่เชื่อ `X-Forwarded-For`, path ไม่รวม query string), หน้าดู log ใน Django admin แบบอ่านอย่างเดียว
+- **ยังไม่ทำ:** `Auditable` signal อัตโนมัติ, หน้า Audit Log สำหรับ Admin, การเรียก `log_action` จาก login/logout — ตอนนี้ผู้เรียกแรกคือ API จัดการผู้ใช้ของ Admin (ก้อน d3)
+- ข้อตัดสินใจที่สเปกไม่ได้ระบุ: `content_type` เป็น `SET_NULL` (ลบโมเดลปลายทางแล้วประวัติต้องไม่หาย — `object_repr` ยังบอกได้ว่าคืออะไร); `log_action` เขียนใน**ธุรกรรมเดียวกับผู้เรียก** (การกระทำย้อนกลับ log ย้อนกลับด้วย และถ้าเขียน log ไม่ได้ ตัวการกระทำก็ล้ม); `log_action` ต้องเรียกก่อนสั่งลบ (หลังลบ Django ล้าง pk ของ instance)
+- ตารางนี้ "เขียนเพิ่มอย่างเดียว" ตามแบบแผนของโค้ดเท่านั้น (ไม่มีโค้ดที่แก้/ลบแถว, Django admin ปิดแก้/ลบ) ยังไม่มีการป้องกันระดับฐานข้อมูล — ดู `docs/pre-deploy-checklist.md`
+
 ---
 
 ## 11. บันทึกการตัดสินใจ (freeze 2026-09-09)

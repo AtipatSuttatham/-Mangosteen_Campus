@@ -43,9 +43,18 @@ Mangosteen_Campus/
 │   │   ├── test_exceptions.py  test ของตัวจัดการ error
 │   │   ├── dev_email_backend.py  ตัวส่งอีเมลตอน dev: พิมพ์ลงคอนโซลโดยไม่ crash เมื่อคอนโซล Windows พิมพ์ภาษาไทยไม่ได้
 │   │   └── test_dev_email_backend.py  test ของตัวส่งอีเมลตอน dev
+│   ├── audit/                ประวัติการกระทำที่เปลี่ยนแปลงข้อมูลสำคัญ (Audit Log — สเปก docs/database.md §10)
+│   │   ├── models.py           AuditLog (เขียนเพิ่มอย่างเดียว) + AuditAction (ชนิดการกระทำ)
+│   │   ├── services.py         log_action (เขียนใน transaction เดียวกับผู้เรียก), field_changes (เทียบเฉพาะฟิลด์ที่ระบุ), request_context (IP/user-agent/path ไม่รวม query)
+│   │   ├── admin.py            หน้าดู log ใน Django admin แบบอ่านอย่างเดียว
+│   │   ├── migrations/         migration ของแอปนี้ (0001 = ตาราง AuditLog)
+│   │   ├── test_models.py      test โมเดล (constraint ของ action, ลบผู้ใช้แล้ว log ยังอยู่, เรียงใหม่สุดก่อน, ดัชนี)
+│   │   ├── test_services.py    test log_action / field_changes (รหัสผ่านไม่หลุดเข้า log) / request_context (ไม่เชื่อ X-Forwarded-For, ไม่เก็บ query)
+│   │   └── test_admin.py       test หน้า admin ของ log (ดูได้ ห้ามเพิ่ม/ลบ)
 │   └── accounts/             บัญชีผู้ใช้ (ต่อไปคือล็อกอิน/สมัคร/ยืนยันอีเมล)
 │       ├── models.py           User แบบกำหนดเอง (อีเมลเป็นตัวล็อกอิน + รหัสนักศึกษา/พนักงาน + role) และ EmailVerificationToken
 │       ├── roles.py            บทบาทระดับระบบ: admin / teacher / student
+│       ├── permissions.py      IsAdminRole: อนุญาตเฉพาะ admin โดยตรวจบทบาทจากฐานข้อมูล (ไม่เชื่อ role ใน token) — ใช้กับ endpoint ของ Admin
 │       ├── validators.py       ตรวจรหัสนักศึกษา/พนักงาน (ห้ามมี @)
 │       ├── managers.py         create_user / create_superuser
 │       ├── forms.py            ฟอร์มสร้าง/แก้ผู้ใช้ในหน้า Django admin
@@ -72,7 +81,8 @@ Mangosteen_Campus/
 │       ├── test_email_tokens.py  test โทเคนในลิงก์อีเมล (ครั้งเดียว, หมดอายุ, ผิดจุดประสงค์, กฎ 60 วินาที)
 │       ├── test_emails.py      test อีเมลยืนยัน/ตั้งรหัสผ่าน (ลิงก์ถูก, ครบสองภาษา)
 │       ├── test_registration_api.py  test API สมัคร/ยืนยันอีเมล/ส่งลิงก์ใหม่ (ปกติ + กรณีโจมตี เช่น สมัครทับ, ยกระดับสิทธิ์)
-│       └── test_password_reset_api.py  test API ลืมรหัสผ่าน/ตั้งรหัสใหม่ และเซสชันเก่าตายเมื่อรหัสเปลี่ยน
+│       ├── test_password_reset_api.py  test API ลืมรหัสผ่าน/ตั้งรหัสใหม่ และเซสชันเก่าตายเมื่อรหัสเปลี่ยน
+│       └── test_permissions.py test IsAdminRole (admin ผ่าน, บทบาทอื่น 403, ไม่ล็อกอิน 401, token เก่าที่ role ไม่ตรงฐานข้อมูล)
 │
 └── frontend/               React 19 + Vite + TypeScript + Tailwind v4 (จัดการแพ็กเกจด้วย pnpm)
     ├── package.json          dependency + สคริปต์ (dev / build / typecheck / lint / test)

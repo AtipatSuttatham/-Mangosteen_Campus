@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "common",
     "accounts",
+    # ประวัติการกระทำที่เปลี่ยนแปลงข้อมูลสำคัญ (Audit Log)
+    "audit",
 ]
 
 # ใช้โมเดลผู้ใช้ของโปรเจกต์ (accounts.User) แทนของ Django — ต้องตั้งก่อน migrate ครั้งแรก
