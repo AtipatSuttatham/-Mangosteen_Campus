@@ -34,4 +34,13 @@
   body {
     @apply bg-paper font-sans text-ink antialiased;
   }
+
+  /* ซ่อนปุ่ม "ดูรหัสผ่าน" (รูปดวงตา) และปุ่มล้างช่องที่เบราว์เซอร์ Edge/IE ใส่ให้เองในช่องกรอก:
+     ระบบมีปุ่ม แสดง/ซ่อน ของตัวเองอยู่แล้ว (components/FormFields.tsx) ถ้าปล่อยไว้จะมีปุ่มซ้อนกันสองปุ่ม */
+  input::-ms-reveal {
+    display: none;
+  }
+  input::-ms-clear {
+    display: none;
+  }
 }
