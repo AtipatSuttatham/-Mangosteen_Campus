@@ -4,9 +4,11 @@ import pytest
 from django.utils import timezone
 
 from accounts.email_tokens import (
+    INVITE_LIFETIME,
     RESEND_COOLDOWN,
     RESET_PASSWORD_LIFETIME,
     VERIFY_EMAIL_LIFETIME,
+    cancel_unused_tokens,
     consume_token,
     hash_token,
     issue_token,
@@ -27,6 +29,62 @@ def user():
     return User.objects.create_user(
         email="student@example.com", password="Str0ng-pass-123", first_name="มานี", last_name="ใจดี"
     )
+
+
+class TestInviteLifetime:
+    def test_invite_link_lives_seven_days(self):
+        assert INVITE_LIFETIME == timedelta(days=7)
+
+    def test_invite_uses_the_reset_password_purpose_with_a_longer_expiry(self, user):
+        # ลิงก์ตั้งรหัสแรกที่ Admin ส่งใช้จุดประสงค์เดียวกับ "ลืมรหัสผ่าน" (ต่างกันที่อายุเท่านั้น)
+        before = timezone.now()
+        raw = issue_token(user, RESET, INVITE_LIFETIME)
+
+        stored = EmailVerificationToken.objects.get()
+        assert stored.purpose == RESET
+        assert stored.expires_at >= before + timedelta(days=7)
+        assert consume_token(raw, RESET) == user
+
+
+class TestCancelUnusedTokens:
+    def test_cancels_every_unused_link_of_every_purpose(self, user):
+        verify = issue_token(user, VERIFY, VERIFY_EMAIL_LIFETIME)
+        reset = issue_token(user, RESET, RESET_PASSWORD_LIFETIME)
+
+        cancel_unused_tokens(user)
+
+        with pytest.raises(TokenInvalid):
+            consume_token(verify, VERIFY)
+        with pytest.raises(TokenInvalid):
+            consume_token(reset, RESET)
+
+    def test_does_not_touch_other_users(self, user):
+        other = User.objects.create_user(
+            email="other@example.com", password="Str0ng-pass-123", first_name="ก", last_name="ข"
+        )
+        others_token = issue_token(other, RESET, RESET_PASSWORD_LIFETIME)
+
+        cancel_unused_tokens(user)
+
+        assert consume_token(others_token, RESET) == other
+
+    def test_keeps_the_original_used_time_of_already_used_links(self, user):
+        raw = issue_token(user, RESET, RESET_PASSWORD_LIFETIME)
+        consume_token(raw, RESET)
+        used_at = EmailVerificationToken.objects.get().used_at
+
+        cancel_unused_tokens(user)
+
+        assert EmailVerificationToken.objects.get().used_at == used_at
+
+    def test_cancelling_does_not_reset_the_resend_cooldown(self, user):
+        # เวลาออกโทเคน (created_at) ไม่เปลี่ยน กฎรอ 60 วินาทีจึงยังนับจากลิงก์ล่าสุดตามเดิม
+        issue_token(user, RESET, RESET_PASSWORD_LIFETIME)
+        before = seconds_until_resend(user, RESET)
+
+        cancel_unused_tokens(user)
+
+        assert 0 < seconds_until_resend(user, RESET) <= before
 
 
 class TestIssue:

@@ -1,6 +1,7 @@
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.http import Http404
 from rest_framework.exceptions import (
+    APIException,
     ErrorDetail,
     NotAuthenticated,
     PermissionDenied,
@@ -46,6 +47,27 @@ def test_handler_adds_error_codes_per_field_for_validation_errors():
         "password": ["password_too_short"],
         "email": ["invalid"],
     }
+
+
+def test_handler_adds_retry_after_when_the_error_has_a_wait():
+    class Busy(APIException):
+        status_code = 429
+        default_code = "busy"
+        wait = 42
+
+    response = api_exception_handler(Busy(), context={})
+
+    assert response.status_code == 429
+    assert response.data["code"] == "busy"
+    assert response.data["retry_after"] == 42
+    # header มาตรฐานของ DRF ใส่ให้เองเมื่อมี wait
+    assert response["Retry-After"] == "42"
+
+
+def test_handler_has_no_retry_after_for_ordinary_errors():
+    response = api_exception_handler(PermissionDenied(), context={})
+
+    assert "retry_after" not in response.data
 
 
 def test_handler_adds_code_to_django_404():

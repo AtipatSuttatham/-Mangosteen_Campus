@@ -41,4 +41,9 @@ def api_exception_handler(exc, context):
     codes = exc.get_codes()
     if isinstance(response.data, dict) and isinstance(codes, str):
         response.data["code"] = codes
+        # error ที่มีเวลาต้องรอ (exc.wait เป็นวินาที) บอกหน้าเว็บด้วยว่าต้องรออีกกี่วินาที
+        # (header Retry-After ที่ DRF ใส่ให้ อ่านจาก JavaScript ข้าม proxy ไม่สะดวก จึงใส่ใน body ด้วย)
+        wait = getattr(exc, "wait", None)
+        if wait:
+            response.data["retry_after"] = int(wait)
     return response

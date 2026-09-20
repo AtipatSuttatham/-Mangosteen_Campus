@@ -59,9 +59,10 @@ Mangosteen_Campus/
 │       ├── roles.py            บทบาทระดับระบบ: admin / teacher / student
 │       ├── user_status.py      สถานะบัญชี 4 แบบ (ใช้งานอยู่ / รอตั้งรหัสผ่าน / รอยืนยันอีเมล / ปิดใช้งาน): status_of (แสดงผล) กับ status_filter (กรองใน SQL) ต้องตรงกันเสมอ
 │       ├── admin_users.py      ตรรกะรายชื่อผู้ใช้ของ Admin: ค้นหา (ทุกคำต้องเจอ) / กรองบทบาท-สถานะ / เรียงใหม่สุดก่อน / นับตามบทบาท (ไม่รู้จัก HTTP)
-│       ├── admin_serializers.py  รูปแบบข้อมูลรายชื่อ/รายละเอียดผู้ใช้สำหรับ Admin (ระบุฟิลด์แบบ whitelist ไม่มีรหัสผ่าน) + ตรวจพารามิเตอร์รายการ
-│       ├── admin_views.py      endpoint ของ Admin: รายชื่อผู้ใช้ (แบ่งหน้า + role_counts) และรายละเอียดผู้ใช้ 1 คน (no-store)
-│       ├── admin_urls.py       เส้นทางใต้ /api/admin/ (ตอนนี้ users/ และ users/<id>/)
+│       ├── user_management.py  ตรรกะเขียนของ Admin: สร้างบัญชี (ส่งลิงก์ตั้งรหัส 7 วัน) / แก้ข้อมูล (เปลี่ยนอีเมลยกเลิกลิงก์เก่า) / ปิด-เปิดใช้งาน / ส่งลิงก์ซ้ำ — ทุกอย่างในธุรกรรมเดียวกับ Audit Log, กัน Admin ปิด/ลดบทบาทตัวเอง และกันไม่ให้เหลือ Admin เป็นศูนย์ (ไม่รู้จัก HTTP)
+│       ├── admin_serializers.py  รูปแบบข้อมูลเข้า (สร้าง/แก้ รับเฉพาะฟิลด์ที่ประกาศ) และออก (รายชื่อ/รายละเอียด ระบุฟิลด์แบบ whitelist ไม่มีรหัสผ่าน) + ตรวจพารามิเตอร์รายการ
+│       ├── admin_views.py      endpoint ของ Admin: รายชื่อ/สร้าง, รายละเอียด/แก้, ปิด, เปิด, ส่งลิงก์ตั้งรหัสซ้ำ (no-store)
+│       ├── admin_urls.py       เส้นทางใต้ /api/admin/ (users/, users/<id>/, .../deactivate/, .../activate/, .../resend-invite/)
 │       ├── permissions.py      IsAdminRole: อนุญาตเฉพาะ admin โดยตรวจบทบาทจากฐานข้อมูล (ไม่เชื่อ role ใน token) — ใช้กับ endpoint ของ Admin
 │       ├── validators.py       ตรวจรหัสนักศึกษา/พนักงาน (ห้ามมี @)
 │       ├── managers.py         create_user / create_superuser
@@ -70,11 +71,11 @@ Mangosteen_Campus/
 │       ├── services.py         หาผู้ใช้จากช่อง login ช่องเดียว (@ = อีเมล) และตรวจรหัสผ่าน
 │       ├── tokens.py           ออก/ตรวจ refresh token (ใส่ role + ผูกกับรหัสผ่านปัจจุบัน) และตั้ง/ลบ cookie
 │       ├── email_tokens.py     ออก/ใช้โทเคนครั้งเดียวในลิงก์อีเมล (เก็บเฉพาะแฮช), กฎขอลิงก์ใหม่ทุก 60 วินาที
-│       ├── emails.py           ส่งอีเมลลิงก์ยืนยันอีเมล / ตั้งรหัสผ่านใหม่ (ไทย+อังกฤษในฉบับเดียว)
+│       ├── emails.py           ส่งอีเมลลิงก์ยืนยันอีเมล / ตั้งรหัสผ่านใหม่ / บัญชีที่ Admin สร้างให้ (ไทย+อังกฤษในฉบับเดียว)
 │       ├── registration.py     ตรรกะสมัครเองด้วยอีเมล / ยืนยันอีเมล / ขอลิงก์ยืนยันใหม่
 │       ├── password_reset.py   ตรรกะลืมรหัสผ่าน: ขอลิงก์ / ตรวจลิงก์ / ตั้งรหัสใหม่ (เซสชันเดิมใช้ไม่ได้)
 │       ├── password_rules.py   ตรวจกฎรหัสผ่านพร้อมรหัส code รายกฎ (ใช้ร่วมตอนสมัครและตั้งรหัสใหม่)
-│       ├── templates/accounts/email/  ข้อความอีเมล: verify_email.txt, reset_password.txt
+│       ├── templates/accounts/email/  ข้อความอีเมล: verify_email.txt, reset_password.txt, admin_invite.txt (บัญชีที่ Admin สร้างให้ — ลิงก์ตั้งรหัส 7 วัน)
 │       ├── serializers.py      รูปแบบข้อมูลเข้า-ออกของ login และข้อมูลผู้ใช้
 │       ├── exceptions.py       error ของระบบล็อกอิน (แต่ละตัวมี `code`)
 │       ├── views.py            endpoint: login / refresh / logout / me / register / verify-email / resend-verification / forgot-password / reset-password (+ check)
@@ -92,6 +93,8 @@ Mangosteen_Campus/
 │       ├── test_password_reset_api.py  test API ลืมรหัสผ่าน/ตั้งรหัสใหม่ และเซสชันเก่าตายเมื่อรหัสเปลี่ยน
 │       ├── test_user_status.py test สถานะ 4 แบบ และว่ากฎแสดงผลกับกฎกรองตรงกันทุกชุดเงื่อนไข
 │       ├── test_admin_users_api.py  test API รายชื่อ/รายละเอียดผู้ใช้ของ Admin (สิทธิ์, แบ่งหน้า, กรอง, ค้นหา, ตัวเลขบนแท็บ, ไม่มี N+1, ไม่มีรหัสผ่านหลุด)
+│       ├── test_user_management.py  test ตรรกะเขียน (service): ลิงก์เก่าตายตอนเปลี่ยนอีเมล, Admin คนสุดท้าย, ธุรกรรมย้อนกลับ, unique แข่งกัน, กฎรอ 60 วินาที
+│       ├── test_admin_users_write_api.py  test API เขียน: สร้าง/แก้/ปิด/เปิด/ส่งลิงก์ซ้ำ (สิทธิ์, mass assignment, วงจรสร้าง→ตั้งรหัส→เข้าสู่ระบบ, ปิดแล้วล็อกทันที)
 │       └── test_permissions.py test IsAdminRole (admin ผ่าน, บทบาทอื่น 403, ไม่ล็อกอิน 401, token เก่าที่ role ไม่ตรงฐานข้อมูล)
 │
 └── frontend/               React 19 + Vite + TypeScript + Tailwind v4 (จัดการแพ็กเกจด้วย pnpm)

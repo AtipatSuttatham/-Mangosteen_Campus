@@ -2,7 +2,9 @@ from rest_framework import serializers
 
 from .admin_users import MAX_SEARCH_LENGTH
 from .models import User
+from .registration import normalize_email
 from .roles import Role
+from .user_management import email_in_use, staff_id_in_use
 from .user_status import UserStatus, status_of
 
 
@@ -17,6 +19,51 @@ class AdminUserQuerySerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=UserStatus.choices, required=False, allow_blank=True)
     # CharField ตัดช่องว่างหัวท้ายให้เอง ข้อความว่างหรือมีแต่ช่องว่างจึงเท่ากับไม่ค้นหา
     search = serializers.CharField(required=False, allow_blank=True, max_length=MAX_SEARCH_LENGTH)
+
+
+class AdminUserWriteSerializer(serializers.Serializer):
+    """ข้อมูลเข้าของการสร้างบัญชี (บังคับ role, first_name, last_name, email) และการแก้ไข (partial)
+
+    รับเฉพาะฟิลด์ที่ประกาศไว้นี้ — ฟิลด์อื่นที่ส่งมา (password, is_active, is_staff, is_superuser,
+    created_by, is_email_verified ฯลฯ) ถูกทิ้งทั้งหมด จึงตั้งสิทธิ์หรือรหัสผ่านผ่านทางนี้ไม่ได้
+    (กัน mass assignment) ตรวจซ้ำของอีเมล/รหัสที่ระดับฟิลด์ เพื่อให้ผู้ใช้เห็นข้อผิดพลาดทุกช่อง
+    พร้อมกันในรอบเดียว (ตอนแก้ไข instance = ผู้ใช้ที่กำลังแก้ จึงไม่นับซ้ำกับตัวเอง)
+    """
+
+    role = serializers.ChoiceField(choices=Role.choices)
+    # CharField ตัดช่องว่างหัวท้ายให้เอง และไม่ยอมรับค่าว่าง
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=254)
+    # ว่าง/null = ไม่มีรหัส (เก็บเป็น NULL) — ตอนแก้ ส่งค่าว่างเพื่อล้างรหัสได้
+    student_or_staff_id = serializers.CharField(
+        max_length=50, required=False, allow_blank=True, allow_null=True
+    )
+    first_name_en = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    last_name_en = serializers.CharField(max_length=150, required=False, allow_blank=True)
+
+    def _exclude_pk(self) -> int | None:
+        return self.instance.pk if self.instance is not None else None
+
+    def validate_email(self, value: str) -> str:
+        # อีเมลในฐานข้อมูลเป็นตัวพิมพ์เล็กเสมอ จึงตรวจซ้ำแบบไม่สนตัวพิมพ์
+        value = normalize_email(value)
+        if email_in_use(value, exclude_pk=self._exclude_pk()):
+            raise serializers.ValidationError("อีเมลนี้ถูกใช้แล้ว", code="email_taken")
+        return value
+
+    def validate_student_or_staff_id(self, value: str | None) -> str | None:
+        value = (value or "").strip()
+        if not value:
+            return None
+        # รหัสห้ามมี @ (หน้า login ใช้ @ แยกอีเมลออกจากรหัส) — code เดียวกับตัวตรวจของโมเดล
+        if "@" in value:
+            raise serializers.ValidationError(
+                "รหัสห้ามมีเครื่องหมาย @", code="staff_id_contains_at_sign"
+            )
+        if staff_id_in_use(value, exclude_pk=self._exclude_pk()):
+            raise serializers.ValidationError("รหัสนี้ถูกใช้แล้ว", code="staff_id_taken")
+        return value
 
 
 class AdminUserListSerializer(serializers.ModelSerializer):

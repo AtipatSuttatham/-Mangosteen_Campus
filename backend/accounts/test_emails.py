@@ -3,7 +3,11 @@ import re
 import pytest
 from django.core import mail
 
-from accounts.emails import send_password_reset_email, send_verification_email
+from accounts.emails import (
+    send_account_invite_email,
+    send_password_reset_email,
+    send_verification_email,
+)
 from accounts.models import User
 
 # ทุก test ในไฟล์นี้ใช้ฐานข้อมูลจริง (Postgres); pytest-django ใช้กล่องอีเมลจำลอง (mail.outbox) ให้เอง
@@ -43,6 +47,43 @@ class TestVerificationEmail:
         assert "24 hours" in message.body
         assert "Verify your email" in message.subject
         assert "ยืนยันอีเมล" in message.subject
+
+
+class TestAccountInviteEmail:
+    def test_goes_to_the_user_with_a_link_to_the_set_password_page(self, user):
+        send_account_invite_email(user, TOKEN)
+
+        message = mail.outbox[0]
+        assert message.to == ["student@example.com"]
+        assert "https://campus.example.ac.th/reset-password?token=abc-DEF_123" in message.body
+
+    def test_says_seven_days_in_both_languages(self, user):
+        send_account_invite_email(user, TOKEN)
+
+        body = mail.outbox[0].body
+        assert "หมดอายุใน 7 วัน" in body
+        assert "expires in 7 days" in body
+        # ต้องไม่ขึ้นเป็นชั่วโมง (7 วัน = 168 ชั่วโมง อ่านยาก)
+        assert "168" not in body
+
+    def test_is_addressed_to_the_person_and_says_an_admin_created_the_account(self, user):
+        send_account_invite_email(user, TOKEN)
+
+        message = mail.outbox[0]
+        assert "สวัสดี มานี" in message.body
+        assert "Hello มานี" in message.body
+        assert "ผู้ดูแลระบบสร้างบัญชี" in message.body
+        assert "An administrator has created" in message.body
+        assert "ตั้งรหัสผ่านเพื่อเริ่มใช้งาน" in message.subject
+        assert "Your account is ready" in message.subject
+
+    def test_existing_emails_still_say_hours(self, user):
+        # เพิ่ม days เข้าเทมเพลตแล้ว อีเมลเดิม (ชั่วโมง) ต้องไม่เปลี่ยน
+        send_verification_email(user, TOKEN)
+        send_password_reset_email(user, TOKEN)
+
+        assert "24 ชั่วโมง" in mail.outbox[0].body
+        assert "1 ชั่วโมง" in mail.outbox[1].body
 
 
 class TestPasswordResetEmail:

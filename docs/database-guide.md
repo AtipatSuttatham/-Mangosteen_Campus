@@ -383,9 +383,9 @@ is_published = False (draft)  ──► True (published, นศ.เห็น)  �
 3. login ได้เมื่อ `is_email_verified=True`
 
 ### W2 — Admin สร้างบัญชีครู
-1. Admin กรอกฟอร์ม → `POST /admin/users` → สร้าง `User(role=teacher, student_or_staff_id=…, created_by=<admin>, is_email_verified=True)`
-2. `Auditable` signal → `AuditLog(action=create, content_type=User, actor=<admin>)`
-3. ส่งอีเมลลิงก์ตั้งรหัสผ่านครั้งแรก = `EmailVerificationToken(purpose=reset_password)` — บัญชีที่ Admin สร้างยังไม่มีรหัสผ่านจนกว่าเจ้าของกดลิงก์ — ลิงก์ที่ Admin ส่งให้ตั้งรหัสผ่านครั้งแรกมีอายุ **7 วัน** (Admin กด "ส่งลิงก์อีกครั้ง" ได้เมื่อหมดอายุ) ส่วนลิงก์ "ลืมรหัสผ่าน" ที่ผู้ใช้ขอเองอายุ **1 ชั่วโมง** — endpoint `POST /auth/forgot-password/` ส่งลิงก์เฉพาะบัญชีที่ยืนยันอีเมลแล้ว, `POST /auth/reset-password/` ตั้งรหัสใหม่และทำให้เซสชันเดิมทั้งหมดใช้ไม่ได้ (ดู `docs/api-auth.md`)
+1. Admin กรอกฟอร์ม → `POST /api/admin/users/` → สร้าง `User(role=teacher, student_or_staff_id=…, created_by=<admin>, is_email_verified=True)` (**ทำแล้วในก้อน d3** — สัญญา API ดู `docs/api-admin-users.md`)
+2. `log_action(action=create, target=<user>, actor=<admin>)` ในธุรกรรมเดียวกัน → `AuditLog` (ตอนนี้เรียกจากโค้ดตรง ๆ ยังไม่มี `Auditable` signal อัตโนมัติ — ดู `docs/database.md` §10)
+3. ส่งอีเมลลิงก์ตั้งรหัสผ่านครั้งแรก = `EmailVerificationToken(purpose=reset_password)` — บัญชีที่ Admin สร้างยังไม่มีรหัสผ่านจนกว่าเจ้าของกดลิงก์ — ลิงก์ที่ Admin ส่งให้ตั้งรหัสผ่านครั้งแรกมีอายุ **7 วัน** (Admin กด "ส่งลิงก์อีกครั้ง" ได้ **ทุกเมื่อที่พ้นกฎรอ 60 วินาที** ตาม wireframe ไม่ต้องรอให้ลิงก์หมดอายุ ลิงก์เก่าตายทันที — `POST /api/admin/users/{id}/resend-invite/`) ส่วนลิงก์ "ลืมรหัสผ่าน" ที่ผู้ใช้ขอเองอายุ **1 ชั่วโมง** — endpoint `POST /auth/forgot-password/` ส่งลิงก์เฉพาะบัญชีที่ยืนยันอีเมลแล้ว, `POST /auth/reset-password/` ตั้งรหัสใหม่และทำให้เซสชันเดิมทั้งหมดใช้ไม่ได้ (ดู `docs/api-auth.md`)
 
 ### W3 — สร้างรายวิชา + เพิ่ม co-teacher
 1. teacher → `POST /courses` (term, code, name) → `Course(is_published=False, created_by=<teacher>)` + `CourseTeacher(user=<teacher>, course_role=owner)`

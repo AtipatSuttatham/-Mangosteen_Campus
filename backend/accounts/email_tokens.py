@@ -14,10 +14,12 @@ from django.utils import timezone
 from .exceptions import TokenExpired, TokenInvalid
 from .models import EmailVerificationToken, User
 
-# อายุของลิงก์แต่ละแบบ (docs/database.md §3) — ลิงก์ตั้งรหัสครั้งแรก 7 วันของบัญชีที่ Admin สร้าง
-# จะเพิ่มพร้อมฟีเจอร์จัดการผู้ใช้
+# อายุของลิงก์แต่ละแบบ (docs/database.md §3)
 VERIFY_EMAIL_LIFETIME = timedelta(hours=24)
 RESET_PASSWORD_LIFETIME = timedelta(hours=1)
+# ลิงก์ตั้งรหัสผ่านครั้งแรกของบัญชีที่ Admin สร้างให้ (ใช้จุดประสงค์ reset_password เหมือนลิงก์ลืมรหัสผ่าน
+# ต่างกันที่อายุ) — ยาวกว่าเพราะผู้รับอาจไม่ได้เปิดอีเมลทันที
+INVITE_LIFETIME = timedelta(days=7)
 
 # ขอลิงก์ใหม่ของบัญชีเดียวกัน (จุดประสงค์เดียวกัน) ได้ไม่ถี่กว่านี้ — กันคนกดรัวเพื่อสแปมอีเมลของคนอื่น
 RESEND_COOLDOWN = timedelta(seconds=60)
@@ -49,6 +51,18 @@ def issue_token(user: User, purpose: str, lifetime: timedelta) -> str:
             expires_at=now + lifetime,
         )
     return raw_token
+
+
+def cancel_unused_tokens(user: User) -> None:
+    """ยกเลิกโทเคนที่ยังไม่ถูกใช้ "ทุกจุดประสงค์" ของผู้ใช้ทันที (ลิงก์ที่ค้างในกล่องอีเมลใช้ไม่ได้อีก)
+
+    ใช้ตอน Admin เปลี่ยนอีเมลของบัญชี: โทเคนผูกกับ "ผู้ใช้" ไม่ใช่ "อีเมล" ถ้าไม่ยกเลิก ลิงก์ที่เคยส่งไปอีเมลเดิม
+    (ยืนยันอีเมล / ตั้งรหัสผ่าน / ลืมรหัสผ่าน) จะยังใช้ได้ และเจ้าของอีเมลเดิมจะเข้าบัญชีนี้ได้
+    ยกเลิกด้วยการทำเครื่องหมาย "ใช้แล้ว" แบบเดียวกับที่ issue_token ทำ
+    """
+    EmailVerificationToken.objects.filter(user=user, used_at__isnull=True).update(
+        used_at=timezone.now()
+    )
 
 
 def seconds_until_resend(user: User, purpose: str) -> int:

@@ -1,0 +1,22 @@
+{% autoescape off %}สวัสดี {{ first_name }},
+
+ผู้ดูแลระบบสร้างบัญชี Mangosteen Campus ให้คุณแล้ว เปิดลิงก์นี้เพื่อตั้งรหัสผ่านและเริ่มใช้งาน:
+
+{{ link }}
+
+ลิงก์ใช้ได้ครั้งเดียวและหมดอายุใน {{ days }} วัน
+ตั้งรหัสผ่านเสร็จแล้ว เข้าสู่ระบบด้วยอีเมลนี้ได้ทันที
+ถ้าคุณไม่ได้คาดว่าจะได้รับอีเมลนี้ ไม่ต้องทำอะไร บัญชียังไม่มีรหัสผ่านและเข้าใช้งานไม่ได้
+
+------------------------------------------------------------
+
+Hello {{ first_name }},
+
+An administrator has created a Mangosteen Campus account for you. Open this link to set your password and get started:
+
+{{ link }}
+
+The link works once and expires in {{ days }} day{{ days|pluralize }}.
+Once your password is set, you can sign in with this email address.
+If you weren't expecting this email, you can ignore it. The account has no password yet and can't be used.
+{% endautoescape %}
