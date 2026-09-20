@@ -1,3 +1,5 @@
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.http import Http404
 from rest_framework.exceptions import (
     ErrorDetail,
     NotAuthenticated,
@@ -44,6 +46,21 @@ def test_handler_adds_error_codes_per_field_for_validation_errors():
         "password": ["password_too_short"],
         "email": ["invalid"],
     }
+
+
+def test_handler_adds_code_to_django_404():
+    # ค้นหาแถวด้วย id ที่ไม่มีอยู่ (get_object_or_404) โยน Http404 ของ Django ซึ่งไม่ใช่ APIException
+    response = api_exception_handler(Http404(), context={})
+
+    assert response.status_code == 404
+    assert response.data["code"] == "not_found"
+
+
+def test_handler_adds_code_to_django_permission_denied():
+    response = api_exception_handler(DjangoPermissionDenied(), context={})
+
+    assert response.status_code == 403
+    assert response.data["code"] == "permission_denied"
 
 
 def test_handler_ignores_non_api_exceptions():

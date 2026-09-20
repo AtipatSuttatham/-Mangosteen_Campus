@@ -1,4 +1,6 @@
-from rest_framework.exceptions import APIException, ValidationError
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.http import Http404
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
 from rest_framework.views import exception_handler
 
 
@@ -14,7 +16,18 @@ def api_exception_handler(exc, context):
     """
     # ให้ DRF สร้าง response มาตรฐาน (รวมสถานะ HTTP และ header เช่น WWW-Authenticate) ก่อน
     response = exception_handler(exc, context)
-    if response is None or not isinstance(exc, APIException):
+    if response is None:
+        return response
+
+    # get_object_or_404 ของ Django โยน Http404 (และโค้ดบางส่วนโยน PermissionDenied ของ Django) ซึ่งไม่ใช่
+    # APIException DRF แปลงเป็นคำตอบ 404/403 ให้แล้วแต่ไม่ใส่ "code" — แปลงเป็นคู่ของ DRF เพื่อให้ได้ code
+    # ("not_found" / "permission_denied") เหมือน error อื่น หน้าเว็บจะได้แปลข้อความได้
+    if isinstance(exc, Http404):
+        exc = NotFound()
+    elif isinstance(exc, DjangoPermissionDenied):
+        exc = PermissionDenied()
+
+    if not isinstance(exc, APIException):
         return response
 
     if isinstance(exc, ValidationError):

@@ -10,4 +10,6 @@ urlpatterns = [
     path("api/health/", health),
     # ล็อกอิน / ต่ออายุ / ออกจากระบบ / ข้อมูลตัวเอง
     path("api/auth/", include("accounts.urls")),
+    # ฟังก์ชันของผู้ดูแลระบบ (เฉพาะบทบาท admin) เช่น จัดการผู้ใช้
+    path("api/admin/", include("accounts.admin_urls")),
 ]

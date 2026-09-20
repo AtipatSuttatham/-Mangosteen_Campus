@@ -23,6 +23,7 @@ Mangosteen_Campus/
 │   ├── database-erd.md       ERD แบบ Mermaid แยกตามโดเมน
 │   ├── database-fields.md    สรุป field ทุกตารางแบบ quick reference
 │   ├── api-auth.md           สัญญา API ล็อกอิน (endpoint, cookie, รูปแบบ error) สำหรับฝั่งเว็บ
+│   ├── api-admin-users.md    สัญญา API จัดการผู้ใช้ของ Admin (รายชื่อ/รายละเอียด, สถานะ 4 แบบ, กฎค้นหา, แบ่งหน้า) สำหรับฝั่งเว็บ
 │   ├── pre-deploy-checklist.md  เช็กลิสต์สิ่งที่ต้องทำก่อนขึ้นเว็บจริง (ความปลอดภัย, งานเบื้องหลัง, อีเมล)
 │   └── design.md             แนวทางดีไซน์ UI (สี ฟอนต์ โครงหน้า) + สถานะ wireframe
 │
@@ -39,8 +40,10 @@ Mangosteen_Campus/
 │   │   ├── models.py           abstract model กลาง: TimeStampedModel (Auditable / SoftDeleteModel จะเพิ่มภายหลัง)
 │   │   ├── views.py            health check (`GET /api/health/`)
 │   │   ├── test_health.py      test ของ health check
-│   │   ├── exceptions.py       ตัวจัดการ error ของ API ทั้งระบบ — ทุก error มี `code` ให้ frontend ใช้แปลภาษา
+│   │   ├── exceptions.py       ตัวจัดการ error ของ API ทั้งระบบ — ทุก error มี `code` ให้ frontend ใช้แปลภาษา (รวม Http404/PermissionDenied ของ Django)
 │   │   ├── test_exceptions.py  test ของตัวจัดการ error
+│   │   ├── pagination.py       StandardPagination: แบ่งหน้า 20 รายการ (ผู้เรียกปรับขนาดหน้าเองไม่ได้) ตอบ count/page/page_size/total_pages/next/previous/results
+│   │   ├── test_pagination.py  test ของตัวแบ่งหน้า
 │   │   ├── dev_email_backend.py  ตัวส่งอีเมลตอน dev: พิมพ์ลงคอนโซลโดยไม่ crash เมื่อคอนโซล Windows พิมพ์ภาษาไทยไม่ได้
 │   │   └── test_dev_email_backend.py  test ของตัวส่งอีเมลตอน dev
 │   ├── audit/                ประวัติการกระทำที่เปลี่ยนแปลงข้อมูลสำคัญ (Audit Log — สเปก docs/database.md §10)
@@ -54,6 +57,11 @@ Mangosteen_Campus/
 │   └── accounts/             บัญชีผู้ใช้ (ต่อไปคือล็อกอิน/สมัคร/ยืนยันอีเมล)
 │       ├── models.py           User แบบกำหนดเอง (อีเมลเป็นตัวล็อกอิน + รหัสนักศึกษา/พนักงาน + role) และ EmailVerificationToken
 │       ├── roles.py            บทบาทระดับระบบ: admin / teacher / student
+│       ├── user_status.py      สถานะบัญชี 4 แบบ (ใช้งานอยู่ / รอตั้งรหัสผ่าน / รอยืนยันอีเมล / ปิดใช้งาน): status_of (แสดงผล) กับ status_filter (กรองใน SQL) ต้องตรงกันเสมอ
+│       ├── admin_users.py      ตรรกะรายชื่อผู้ใช้ของ Admin: ค้นหา (ทุกคำต้องเจอ) / กรองบทบาท-สถานะ / เรียงใหม่สุดก่อน / นับตามบทบาท (ไม่รู้จัก HTTP)
+│       ├── admin_serializers.py  รูปแบบข้อมูลรายชื่อ/รายละเอียดผู้ใช้สำหรับ Admin (ระบุฟิลด์แบบ whitelist ไม่มีรหัสผ่าน) + ตรวจพารามิเตอร์รายการ
+│       ├── admin_views.py      endpoint ของ Admin: รายชื่อผู้ใช้ (แบ่งหน้า + role_counts) และรายละเอียดผู้ใช้ 1 คน (no-store)
+│       ├── admin_urls.py       เส้นทางใต้ /api/admin/ (ตอนนี้ users/ และ users/<id>/)
 │       ├── permissions.py      IsAdminRole: อนุญาตเฉพาะ admin โดยตรวจบทบาทจากฐานข้อมูล (ไม่เชื่อ role ใน token) — ใช้กับ endpoint ของ Admin
 │       ├── validators.py       ตรวจรหัสนักศึกษา/พนักงาน (ห้ามมี @)
 │       ├── managers.py         create_user / create_superuser
@@ -82,6 +90,8 @@ Mangosteen_Campus/
 │       ├── test_emails.py      test อีเมลยืนยัน/ตั้งรหัสผ่าน (ลิงก์ถูก, ครบสองภาษา)
 │       ├── test_registration_api.py  test API สมัคร/ยืนยันอีเมล/ส่งลิงก์ใหม่ (ปกติ + กรณีโจมตี เช่น สมัครทับ, ยกระดับสิทธิ์)
 │       ├── test_password_reset_api.py  test API ลืมรหัสผ่าน/ตั้งรหัสใหม่ และเซสชันเก่าตายเมื่อรหัสเปลี่ยน
+│       ├── test_user_status.py test สถานะ 4 แบบ และว่ากฎแสดงผลกับกฎกรองตรงกันทุกชุดเงื่อนไข
+│       ├── test_admin_users_api.py  test API รายชื่อ/รายละเอียดผู้ใช้ของ Admin (สิทธิ์, แบ่งหน้า, กรอง, ค้นหา, ตัวเลขบนแท็บ, ไม่มี N+1, ไม่มีรหัสผ่านหลุด)
 │       └── test_permissions.py test IsAdminRole (admin ผ่าน, บทบาทอื่น 403, ไม่ล็อกอิน 401, token เก่าที่ role ไม่ตรงฐานข้อมูล)
 │
 └── frontend/               React 19 + Vite + TypeScript + Tailwind v4 (จัดการแพ็กเกจด้วย pnpm)
