@@ -5,10 +5,10 @@ import { Link } from 'react-router'
 import { registerAccount, resendVerification } from '../auth/accountApi'
 import { AuthLayout } from '../components/AuthLayout'
 import { PasswordField, TextField } from '../components/FormFields'
+import { ResendBlock } from '../components/ResendBlock'
 import { StatusCard } from '../components/StatusCard'
 import { ApiError, type FieldErrors } from '../lib/apiError'
 import { fieldErrorNode } from '../lib/fieldErrors'
-import { useResend } from '../lib/useResend'
 
 // ปุ่มลิงก์แบบตัวอักษรม่วง (ใช้ทั้งลิงก์ไปหน้าอื่นและปุ่มที่หน้าตาเป็นลิงก์)
 const LINK_CLASS =
@@ -125,11 +125,15 @@ export default function RegisterPage() {
           maxLength={254}
           error={
             fieldErrors.email?.includes('email_taken') ? (
-              // อีเมลนี้มีบัญชีแล้ว: บอกทางไปต่อ (เข้าสู่ระบบ)
+              // อีเมลนี้มีบัญชีแล้ว: บอกทางไปต่อ (เข้าสู่ระบบ หรือลืมรหัสผ่านถ้าจำไม่ได้)
               <>
                 {t('fieldErrors.email_taken')}{' '}
                 <Link to="/login" className={LINK_CLASS}>
                   {t('register.login')}
+                </Link>
+                {' · '}
+                <Link to="/forgot-password" className={LINK_CLASS}>
+                  {t('login.forgot')}
                 </Link>
               </>
             ) : (
@@ -179,7 +183,6 @@ export default function RegisterPage() {
 // หน้า "ตรวจสอบอีเมลของคุณ" หลังสมัครสำเร็จ พร้อมปุ่มส่งลิงก์ยืนยันอีกครั้ง (รอ 60 วินาทีระหว่างครั้งตามที่ backend กำหนด)
 function CheckInbox({ email }: { email: string }) {
   const { t } = useTranslation()
-  const resend = useResend(resendVerification)
 
   return (
     <StatusCard tone="info" icon="mail" title={t('checkInbox.title')}>
@@ -192,29 +195,7 @@ function CheckInbox({ email }: { email: string }) {
         />
       </p>
 
-      <p className="text-[13.5px] text-ink-2">
-        {t('checkInbox.noEmail')}{' '}
-        <button
-          type="button"
-          onClick={() => void resend.trigger(email)}
-          disabled={resend.status === 'sending' || resend.secondsLeft > 0}
-          className={`cursor-pointer ${LINK_CLASS} disabled:cursor-not-allowed disabled:text-ink-3 disabled:no-underline`}
-        >
-          {resend.secondsLeft > 0
-            ? t('checkInbox.resendWait', { seconds: resend.secondsLeft })
-            : t('checkInbox.resend')}
-        </button>
-      </p>
-
-      {/* ผลการส่ง: role=status ให้โปรแกรมอ่านหน้าจออ่านเมื่อข้อความเปลี่ยน */}
-      <div role="status" className="text-[13px] leading-normal text-ok-800">
-        {resend.status === 'sent' && t('checkInbox.resent')}
-      </div>
-      {resend.status === 'error' && (
-        <p role="alert" className="text-[13px] leading-normal text-error-800">
-          {t(`errors.${resend.errorCode}.title`, { defaultValue: t('errors.unknown_error.title') })}
-        </p>
-      )}
+      <ResendBlock email={email} send={resendVerification} i18nPrefix="checkInbox" />
     </StatusCard>
   )
 }

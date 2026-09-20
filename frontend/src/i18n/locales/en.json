@@ -31,7 +31,8 @@
     "register": "Sign up with email",
     "resendVerification": "Send the verification link again",
     "resendWait": "You can send it again in {{seconds}} s",
-    "verificationSent": "If this email isn't verified yet, we've sent you a link"
+    "verificationSent": "If this email isn't verified yet, we've sent you a link",
+    "passwordResetDone": "Your password has been changed. Please sign in with the new password"
   },
   "register": {
     "tagline": "Sign up with email and start learning right after you verify",
@@ -73,6 +74,44 @@
     "sendWait": "You can send again in {{seconds}} s",
     "sent": "If this email signed up and isn't verified yet, we've sent a new link",
     "retry": "Try again"
+  },
+  "forgot": {
+    "tagline": "Forgot your password? Set a new one by email",
+    "taglineSub": "Enter your account's email and we'll send you a link to set a new password",
+    "title": "Forgot password",
+    "subtitle": "Enter your account's email and we'll send you a link to set a new password",
+    "email": "Email",
+    "emailPlaceholder": "name@email.com",
+    "submit": "Send the reset link",
+    "submitting": "Sending",
+    "backToLogin": "Back to sign in",
+    "sentTitle": "Check your email",
+    "sentBody": "If an account uses <email>{{email}}</email>, we've sent a link to set a new password. The link works for 1 hour",
+    "sentUnverifiedHint": "If you just signed up and haven't verified your email, verify it first",
+    "noEmail": "Didn't get the email?",
+    "resend": "Send again",
+    "resendWait": "You can send again in {{seconds}} s",
+    "resent": "If this account exists, we've sent a new link. The previous link no longer works"
+  },
+  "reset": {
+    "tagline": "Set your own password",
+    "taglineSub": "Use this page both when you first get started and when you forget your password",
+    "checking": "Checking your link",
+    "title": "Set a new password",
+    "subtitle": "For the account {{email}}",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "submit": "Set password",
+    "submitting": "Saving",
+    "invalidTitle": "This link no longer works",
+    "invalidBody": "Links expire and work only once. Request a new one to continue",
+    "requestNew": "Request a new link",
+    "retry": "Try again",
+    "rulesLabel": "Password requirements",
+    "rulePassed": "Met",
+    "ruleFailed": "Not met",
+    "ruleLength": "At least 8 characters",
+    "ruleNotNumeric": "Not only numbers"
   },
   "roles": {
     "admin": "Administrator",

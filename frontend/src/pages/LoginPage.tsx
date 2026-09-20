@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 
 import { resendVerification } from '../auth/accountApi'
 import { useAuth } from '../auth/useAuth'
@@ -9,25 +9,24 @@ import { PasswordField, TextField } from '../components/FormFields'
 import { ApiError } from '../lib/apiError'
 import { useResend } from '../lib/useResend'
 
-// ปุ่มที่หน้าปลายทางยังไม่มี (ลืมรหัสผ่าน): แสดงตามตำแหน่งในแบบแต่กดไม่ได้ จะเปิดในก้อนถัดไป
-function ComingSoonLink({ label, className = '' }: { label: string; className?: string }) {
-  const { t } = useTranslation()
-  return (
-    <button
-      type="button"
-      disabled
-      title={t('common.comingSoon')}
-      className={`cursor-not-allowed text-ink-3 ${className}`}
-    >
-      {label}
-    </button>
-  )
-}
+// ข้อความที่หน้าอื่นฝากมาแสดงบนหน้า login (ผ่าน state ของการเปลี่ยนหน้า)
+type LoginNotice = { notice?: 'passwordReset' } | null
 
 // หน้าเข้าสู่ระบบ ตาม wireframe (โครงหน้าอยู่ที่ AuthLayout)
 export default function LoginPage() {
   const { t } = useTranslation()
   const { login } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  // ตั้งรหัสผ่านใหม่สำเร็จแล้วถูกพามาที่นี่: จำไว้เป็นค่าของหน้านี้ แล้วล้างออกจาก state ของเบราว์เซอร์
+  // (กดรีเฟรชแล้วข้อความหายไป ไม่ค้างตลอดไป)
+  const [passwordResetDone] = useState(() => (location.state as LoginNotice)?.notice === 'passwordReset')
+  useEffect(() => {
+    if (passwordResetDone) navigate(location.pathname, { replace: true, state: null })
+    // ทำครั้งเดียวตอนเปิดหน้า
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -58,6 +57,15 @@ export default function LoginPage() {
   return (
     <AuthLayout title={t('login.title')} subtitle={t('login.subtitle')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {passwordResetDone && (
+          <div
+            role="status"
+            className="rounded-md border border-ok-200 bg-ok-50 px-3.5 py-3 text-sm font-medium text-ok-800"
+          >
+            {t('login.passwordResetDone')}
+          </div>
+        )}
+
         {errorCode && (
           <div
             role="alert"
@@ -118,7 +126,14 @@ export default function LoginPage() {
           autoComplete="current-password"
           placeholder={t('login.passwordPlaceholder')}
           // ลืมรหัสผ่าน: อยู่ใต้ช่องรหัสผ่านตามที่ผู้ใช้กำหนด
-          footer={<ComingSoonLink label={t('login.forgot')} className="self-start text-[13px] font-medium" />}
+          footer={
+            <Link
+              to="/forgot-password"
+              className="self-start text-[13px] font-medium text-plum-800 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plum-800"
+            >
+              {t('login.forgot')}
+            </Link>
+          }
         />
 
         <button

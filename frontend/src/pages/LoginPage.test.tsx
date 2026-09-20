@@ -157,16 +157,41 @@ describe('หน้า login (ทั้งสายกับ AuthProvider แล
     expect(field).toHaveAttribute('type', 'password')
   })
 
-  it('ลิงก์ลืมรหัสผ่านอยู่ใต้ช่องรหัสผ่าน (ยังปิดไว้จนกว่าจะมีหน้าปลายทาง)', async () => {
+  it('ลิงก์ลืมรหัสผ่านอยู่ใต้ช่องรหัสผ่าน และพาไปหน้าลืมรหัสผ่าน', async () => {
     mockFetch({ [REFRESH]: noSession })
-    renderApp('/login')
+    const router = renderApp('/login')
     const passwordField = await screen.findByLabelText('รหัสผ่าน')
 
-    const forgot = screen.getByRole('button', { name: 'ลืมรหัสผ่าน' })
+    const forgot = screen.getByRole('link', { name: 'ลืมรหัสผ่าน' })
 
-    expect(forgot).toBeDisabled()
     // ลืมรหัสผ่านต้องตามหลังช่องรหัสผ่านใน DOM (อยู่ใต้ช่อง ตามที่ผู้ใช้กำหนด)
     expect(passwordField.compareDocumentPosition(forgot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(forgot)
+    await waitFor(() => expect(router.state.location.pathname).toBe('/forgot-password'))
+    expect(await screen.findByRole('heading', { name: 'ลืมรหัสผ่าน' })).toBeInTheDocument()
+  })
+
+  it('มาจากการตั้งรหัสผ่านใหม่สำเร็จ → แสดงกล่องสีเขียว และไม่ค้างอยู่ใน history (รีเฟรชแล้วหาย)', async () => {
+    mockFetch({ [REFRESH]: noSession })
+    const router = renderApp('/register')
+    await screen.findByRole('heading', { name: 'สมัครสมาชิก' })
+
+    await router.navigate('/login', { state: { notice: 'passwordReset' } })
+
+    const notice = await screen.findByRole('status')
+    expect(notice).toHaveTextContent('ตั้งรหัสผ่านใหม่แล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่')
+    expect(notice).toHaveClass('bg-ok-50')
+    // state ถูกล้างจาก history แล้ว (กด reload จะไม่เห็นข้อความอีก) แต่หน้านี้ยังแสดงข้อความอยู่
+    await waitFor(() => expect(router.state.location.state).toBeNull())
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
+
+  it('เปิดหน้า login ตามปกติ ไม่มีกล่องเขียว', async () => {
+    mockFetch({ [REFRESH]: noSession })
+    renderApp('/login')
+    await screen.findByRole('heading', { name: 'เข้าสู่ระบบ' })
+
+    expect(screen.queryByText(/ตั้งรหัสผ่านใหม่แล้ว/)).not.toBeInTheDocument()
   })
 
   it('ลิงก์สมัครสมาชิกพาไปหน้าสมัคร', async () => {

@@ -3,8 +3,10 @@ import { Navigate, type RouteObject } from 'react-router'
 import { PublicOnly, RedirectToHome, RequireAuth, RequireRole } from './auth/guards'
 import { AppShell } from './layout/AppShell'
 import DashboardPage from './pages/DashboardPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 
 // เส้นทางทั้งหมดของแอป (แยกจาก main.tsx เพื่อให้ test ใช้ชุดเดียวกับของจริง)
@@ -15,11 +17,13 @@ export const appRoutes: RouteObject[] = [
     children: [
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
     ],
   },
 
   // หน้าที่เปิดจากลิงก์ในอีเมล: เปิดได้ทั้งตอนล็อกอินอยู่และไม่ได้ (ไม่ใส่ตัวกัน)
   { path: '/verify-email', element: <VerifyEmailPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
 
   // หน้าที่ต้องล็อกอิน
   {

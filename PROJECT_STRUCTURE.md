@@ -85,13 +85,15 @@ Mangosteen_Campus/
     │   └── favicon.svg       ไอคอนแท็บเบราว์เซอร์ (ตราดอก 6 กลีบ)
     └── src/
         ├── main.tsx          จุดเริ่มแอป: โหลดฟอนต์/สไตล์/i18n แล้ว render ภายใต้ QueryClientProvider > AuthProvider > Router
-        ├── router.tsx        เส้นทางทั้งหมด: /login /register (เฉพาะคนที่ยังไม่ล็อกอิน), /verify-email (เปิดจากลิงก์ในอีเมล ไม่มีตัวกัน),
+        ├── router.tsx        เส้นทางทั้งหมด: /login /register /forgot-password (เฉพาะคนที่ยังไม่ล็อกอิน), /verify-email /reset-password (เปิดจากลิงก์ในอีเมล ไม่มีตัวกัน),
         │                     / (ไปหน้าแรกตามบทบาท), /admin /teacher /student (จำกัดตามบทบาท, อยู่ใต้เปลือกหน้า AppShell)
         ├── index.css         Tailwind + โทเคนสี/ฟอนต์ของแบรนด์ (@theme)
         ├── pages/            หน้าจอ
         │   ├── LoginPage.tsx      หน้า login ตาม wireframe (มีปุ่มส่งลิงก์ยืนยันอีกครั้งเมื่อบัญชียังไม่ยืนยันอีเมล)
         │   ├── RegisterPage.tsx   หน้าสมัครสมาชิกด้วยอีเมล + หน้า "ตรวจสอบอีเมลของคุณ" หลังสมัคร (ส่งลิงก์อีกครั้งได้ทุก 60 วินาที)
         │   ├── VerifyEmailPage.tsx  หน้าที่เปิดจากลิงก์ยืนยันอีเมล: ยืนยันให้เองครั้งเดียว / ลิงก์ใช้ไม่ได้ → กรอกอีเมลขอลิงก์ใหม่
+        │   ├── ForgotPasswordPage.tsx  หน้าลืมรหัสผ่าน: กรอกอีเมล → ข้อความเดิมเสมอ ไม่บอกว่ามีบัญชีหรือไม่ (ส่งอีกครั้งได้ทุก 60 วินาที)
+        │   ├── ResetPasswordPage.tsx  หน้าที่เปิดจากลิงก์ตั้งรหัสผ่าน: ตรวจลิงก์ → ฟอร์มรหัสใหม่ + รายการกฎ → ไปหน้า login (เซสชันเดิมใช้ไม่ได้)
         │   ├── DashboardPage.tsx  dashboard ของทั้ง 3 บทบาท (โครงเปล่า: ตัวเลขเป็น "–" จนกว่าจะมี API)
         │   └── dashboardConfig.ts หัวข้อ/ตัวเลขสำคัญ/ช่องข้อมูลของ dashboard แต่ละบทบาท
         ├── layout/           เปลือกหน้าหลังล็อกอิน: AppShell (รวมทุกส่วน), Sidebar (จอกว้าง), MobileChrome (แถบบน + แถบล่างของมือถือ),
@@ -99,12 +101,14 @@ Mangosteen_Campus/
         │                     UserBadge, LogoutButton, BellButton (กระดิ่ง ยังกดไม่ได้)
         ├── components/       component ที่ใช้ซ้ำ: LogoMark (ตราดอก), Icon (ไอคอน), LanguageToggle (สลับ TH/EN), PageMessage (ข้อความเต็มหน้า เช่น กำลังโหลด),
         │                     AuthLayout (โครงหน้าของหน้าที่ยังไม่ล็อกอินทั้งหมด: แผงม่วง + เนื้อหา),
-        │                     FormFields (ช่องข้อความ / ช่องรหัสผ่านแสดง-ซ่อน พร้อมข้อความผิดพลาดที่ผูก aria), StatusCard (วงกลมไอคอน + หัวข้อ ของหน้าสถานะ)
+        │                     FormFields (ช่องข้อความ / ช่องรหัสผ่านแสดง-ซ่อน พร้อมข้อความผิดพลาดที่ผูก aria), StatusCard (วงกลมไอคอน + หัวข้อ ของหน้าสถานะ),
+        │                     ResendBlock ("ไม่ได้รับอีเมล? ส่งอีกครั้ง" พร้อมนับถอยหลัง), PasswordRules (รายการกฎรหัสผ่านที่ติ๊กสดตอนพิมพ์)
         ├── i18n/             ระบบหลายภาษา: index.ts (ตั้งค่า) + language.ts (จำภาษาที่ผู้ใช้เลือกไว้ในเบราว์เซอร์, ค่าเริ่มต้น = ไทย) + locales/th.json, en.json
         ├── lib/              ชั้นเรียก API + ตัวช่วยเล็ก ๆ
         │   ├── cx.ts           รวมชื่อ class เข้าด้วยกัน
         │   ├── apiError.ts     ApiError: error จาก backend ที่มี `code` (และ errorCodes รายฟิลด์) ไว้แปลข้อความ
         │   ├── fieldErrors.tsx แปลรหัสกฎที่ไม่ผ่านของช่อง (เช่น password_too_short) เป็นข้อความใต้ช่อง
+        │   ├── passwordRules.ts กฎรหัสผ่านที่ตรวจในหน้าเว็บได้ (ยาว ≥ 8 ตัวอักษร / ไม่เป็นตัวเลขล้วน) นับตัวอักษรแบบเดียวกับ backend
         │   ├── useCountdown.ts / useResend.ts  ตัวนับถอยหลัง 60 วินาทีและตรรกะปุ่ม "ส่งลิงก์อีกครั้ง"
         │   ├── httpCore.ts     ยิงคำขอ 1 ครั้ง (แนบ token, แปลง error) ไม่มีการลองซ้ำ
         │   └── apiClient.ts    เรียก API ที่ต้อง login: 401 → ขอ token ใหม่แล้วลองซ้ำครั้งเดียว
